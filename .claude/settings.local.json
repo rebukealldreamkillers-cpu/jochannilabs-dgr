@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -c \"import pypdf; r = pypdf.PdfReader\\('C:/Users/kevin/jochannilabs-dgr/Decision Governance Review Methodology.pdf'\\); print\\(f'Pages: {len\\(r.pages\\)}'\\); [print\\(r.pages[i].extract_text\\(\\)\\) for i in range\\(min\\(3, len\\(r.pages\\)\\)\\)]\")",
+      "Bash(python -c \"import pypdf; r = pypdf.PdfReader\\('C:/Users/kevin/jochannilabs-dgr/Decision Governance Review Methodology.pdf'\\); print\\(f'Pages: {len\\(r.pages\\)}'\\); [print\\(r.pages[i].extract_text\\(\\)\\) for i in range\\(min\\(3, len\\(r.pages\\)\\)\\)]\")",
+      "Bash(python3 -c \"import pdfplumber; pdf = pdfplumber.open\\('C:/Users/kevin/jochannilabs-dgr/Decision Governance Review Methodology.pdf'\\); print\\(f'Pages: {len\\(pdf.pages\\)}'\\); [print\\(pdf.pages[i].extract_text\\(\\)\\) for i in range\\(min\\(3, len\\(pdf.pages\\)\\)\\)]\")",
+      "PowerShell(pip list *)",
+      "PowerShell(pip install *)",
+      "PowerShell(python -c \"import pypdf; r = pypdf.PdfReader\\('C:/Users/kevin/jochannilabs-dgr/Decision Governance Review Methodology.pdf'\\); print\\(f'Total pages: {len\\(r.pages\\)}'\\); print\\('--- PAGE 1 ---'\\); print\\(r.pages[0].extract_text\\(\\)\\)\")",
+      "Bash(npx create-next-app@latest . --typescript --tailwind --eslint --app --no-src-dir --import-alias \"@/*\" --yes)",
+      "Bash(npx create-next-app@latest _scaffold --typescript --tailwind --eslint --app --no-src-dir --import-alias \"@/*\" --yes)",
+      "Bash(npx create-next-app@latest scaffold --typescript --tailwind --eslint --app --no-src-dir --import-alias \"@/*\" --yes)",
+      "Bash(cp -r scaffold/. .)",
+      "Bash(rm -rf scaffold)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); pkgs=list\\(d.get\\('packages',{}\\).keys\\(\\)\\)[:20]; [print\\(p\\) for p in pkgs]\")",
+      "Bash(npx shadcn@latest init --yes --defaults)",
+      "Bash(npx shadcn@latest add --yes badge card dialog dropdown-menu form input label select separator sheet skeleton table tabs textarea toast)",
+      "Bash(npx shadcn@latest add --yes form accordion progress tooltip)",
+      "Bash(npm install *)",
+      "Bash(npx tsc *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git remote *)",
+      "Bash(git push *)",
+      "Bash(vercel *)",
+      "Bash(npm run *)",
+      "Bash(npx vercel *)"
+    ]
+  }
+}

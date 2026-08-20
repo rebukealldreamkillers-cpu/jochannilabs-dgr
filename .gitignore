@@ -42,3 +42,6 @@ next-env.d.ts
 
 # project docs (large binary, tracked separately)
 *.pdf
+
+.vercel
+.env*
