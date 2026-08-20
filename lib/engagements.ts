@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { engagements, workflows, investigations, verdicts, defenseFiles } from "@/db/schema";
+import { engagements, workflows, investigations, verdicts, defenseFiles, governanceManifests } from "@/db/schema";
 import { eq, desc, and, isNull } from "drizzle-orm";
 import type { Engagement } from "@/db/schema";
 
@@ -51,7 +51,7 @@ export async function getEngagement(id: string) {
         },
       },
       governanceManifests: {
-        orderBy: [desc(engagements.createdAt)],
+        orderBy: [desc(governanceManifests.generatedAt)],
       },
     },
   });
