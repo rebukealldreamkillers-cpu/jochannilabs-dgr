@@ -9,7 +9,7 @@ export default function SignInPage() {
           <h1 className="text-2xl font-semibold mt-1">Decision Governance Review</h1>
           <p className="text-sm text-muted-foreground mt-2">Analyst sign in</p>
         </div>
-        <SignIn routing="hash" />
+        <SignIn afterSignInUrl="/admin/engagements" afterSignUpUrl="/admin/engagements" />
       </div>
     </div>
   );

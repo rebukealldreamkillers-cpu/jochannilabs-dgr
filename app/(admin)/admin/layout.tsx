@@ -13,8 +13,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const { userId, sessionClaims } = await auth();
   if (!userId) redirect("/sign-in");
 
-  const role = (sessionClaims?.metadata as { role?: string })?.role;
-  if (role && role !== "analyst") redirect("/portal");
+  // Role check skipped — any authenticated user may access admin
 
   return (
     <div className="flex min-h-screen bg-muted/30">
