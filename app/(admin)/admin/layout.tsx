@@ -1,9 +1,9 @@
-import { UserButton } from "@clerk/nextjs";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { LayoutDashboard, FolderOpen } from "lucide-react";
+import { FolderOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SignOutButton } from "@/components/sign-out-button";
 
 const NAV = [
   { href: "/admin/engagements", label: "Engagements", icon: FolderOpen },
@@ -39,9 +39,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             </Link>
           ))}
         </nav>
-        <div className="px-5 py-4 border-t flex items-center gap-3">
-          <UserButton />
-          <span className="text-xs text-muted-foreground">Analyst</span>
+        <div className="px-3 py-4 border-t">
+          <SignOutButton />
         </div>
       </aside>
 
