@@ -7,8 +7,9 @@ export default function SignInPage() {
         <div className="text-center">
           <p className="text-sm text-muted-foreground uppercase tracking-widest font-medium">Jochanni Labs</p>
           <h1 className="text-2xl font-semibold mt-1">Decision Governance Review</h1>
+          <p className="text-sm text-muted-foreground mt-2">Analyst sign in</p>
         </div>
-        <SignIn />
+        <SignIn routing="hash" />
       </div>
     </div>
   );

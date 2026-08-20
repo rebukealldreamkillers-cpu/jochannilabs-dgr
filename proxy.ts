@@ -17,10 +17,6 @@ export default clerkMiddleware(async (auth, req) => {
 
   const role = (sessionClaims?.metadata as { role?: string })?.role;
 
-  if (isAdminRoute(req) && role !== "analyst") {
-    return NextResponse.redirect(new URL("/portal", req.url));
-  }
-
   if (isPortalRoute(req) && role !== "sponsor" && role !== "analyst") {
     return NextResponse.redirect(new URL("/", req.url));
   }
