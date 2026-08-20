@@ -286,6 +286,20 @@ export const defenseFilesRelations = relations(defenseFiles, ({ one }) => ({
   }),
 }));
 
+export const governanceManifestsRelations = relations(governanceManifests, ({ one }) => ({
+  engagement: one(engagements, {
+    fields: [governanceManifests.engagementId],
+    references: [engagements.id],
+  }),
+}));
+
+export const checkpointResponsesRelations = relations(checkpointResponses, ({ one }) => ({
+  engagement: one(engagements, {
+    fields: [checkpointResponses.engagementId],
+    references: [engagements.id],
+  }),
+}));
+
 // ── TypeScript types ──────────────────────────────────────────────────────────
 
 export type RiskEntry = {
