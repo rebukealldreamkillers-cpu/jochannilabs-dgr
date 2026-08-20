@@ -32,7 +32,7 @@ type WorkflowRow = {
   modelTier: string | null;
   existingEvidenceStatus: EvidenceStatus | null;
   sortOrder: number;
-  investigation?: { completedAt: Date | null } | null;
+  investigation?: { completedAt: string | null } | null;
   verdict?: { verdict: Verdict } | null;
   defenseFile?: { status: string } | null;
 };

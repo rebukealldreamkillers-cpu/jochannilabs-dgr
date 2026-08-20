@@ -33,11 +33,16 @@ export default async function EngagementDetailPage({
   const actions = pendingActions(engagement);
   const next = nextStage(stage);
   const workflows = (engagement.workflows ?? []).map((w) => ({
-    ...w,
+    id: w.id,
+    name: w.name,
+    businessOutcome: w.businessOutcome,
     costPerCallUsd: w.costPerCallUsd ?? null,
-    existingEvidenceStatus: w.existingEvidenceStatus as "NONE" | "ANECDOTAL" | "DOCUMENTED" | null,
+    monthlyCallVolume: w.monthlyCallVolume ?? null,
+    modelTier: w.modelTier ?? null,
+    existingEvidenceStatus: (w.existingEvidenceStatus ?? null) as "NONE" | "ANECDOTAL" | "DOCUMENTED" | null,
+    sortOrder: w.sortOrder,
     investigation: w.investigation
-      ? { completedAt: w.investigation.completedAt ?? null }
+      ? { completedAt: w.investigation.completedAt?.toISOString() ?? null }
       : null,
     verdict: w.verdict
       ? { verdict: w.verdict.verdict as "KEEP" | "DOWNSIZE" | "REPLACE" | "KILL" }
