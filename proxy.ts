@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 
 const isAdminRoute = createRouteMatcher(["/admin(.*)"]);
 const isPortalRoute = createRouteMatcher(["/portal(.*)"]);
-const isPublicRoute = createRouteMatcher(["/", "/inquiry", "/sign-in(.*)", "/sign-up(.*)", "/api/inquiry", "/sign/(.*)", "/api/sign/(.*)", "/checkpoint/(.*)", "/api/checkpoint/(.*)"]);
+const isPublicRoute = createRouteMatcher(["/", "/inquiry", "/sign-in(.*)", "/sign-up(.*)", "/sign-out", "/api/inquiry", "/sign/(.*)", "/api/sign/(.*)", "/checkpoint/(.*)", "/api/checkpoint/(.*)"]);
 
 export default clerkMiddleware(async (auth, req) => {
   if (isPublicRoute(req)) return NextResponse.next();
