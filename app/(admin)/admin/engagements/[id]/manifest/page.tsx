@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getEngagement } from "@/lib/engagements";
 import { getLatestManifest, getManifests } from "@/lib/manifests";
 import { ManifestGenerateButton } from "@/components/manifests/manifest-generate-button";
+import { ManifestSignButton } from "@/components/manifests/manifest-sign-button";
 import { PostureBadge } from "@/components/engagements/verdict-badge";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -101,6 +102,9 @@ export default async function ManifestPage({
         </div>
 
         <div className="flex gap-2 flex-shrink-0 flex-wrap items-start">
+          {latest?.manifestStatus === "PROPOSED" && (
+            <ManifestSignButton engagementId={id} manifestId={latest.id} />
+          )}
           <ManifestGenerateButton engagementId={id} hasExisting={!!latest} />
           <a
             href={`/api/engagements/${id}/registry/export?format=manifest`}
