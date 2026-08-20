@@ -6,7 +6,7 @@ const schema = z.discriminatedUnion("action", [
   z.object({ action: z.literal("accept") }),
   z.object({
     action: z.literal("override"),
-    verdict: z.enum(["KEEP", "DOWNSIZE", "REPLACE", "KILL"]),
+    posture: z.enum(["KEEP", "DOWNSIZE", "REPLACE", "KILL"]),
     rationale: z.string().min(10),
     sponsorName: z.string().min(1),
   }),

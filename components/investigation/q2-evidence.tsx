@@ -19,7 +19,7 @@ import type { Investigation } from "@/db/schema";
 type EvidenceType = "NONE" | "ANECDOTAL" | "DOCUMENTED";
 
 type QProps = {
-  workflowId: string;
+  agentId: string;
   investigation: Investigation;
   onComplete: () => void;
 };
@@ -52,12 +52,18 @@ function EvidenceStrengthBadge({ type }: { type: EvidenceType }) {
   );
 }
 
-export function Q2Evidence({ workflowId, investigation, onComplete }: QProps) {
+export function Q2Evidence({ agentId, investigation, onComplete }: QProps) {
   const [evidenceType, setEvidenceType] = useState<EvidenceType>(
     (investigation.q2EvidenceType as EvidenceType | null) ?? "NONE"
   );
   const [evidenceDescription, setEvidenceDescription] = useState(
     investigation.q2EvidenceDescription ?? ""
+  );
+  const [activationThreshold, setActivationThreshold] = useState(
+    investigation.q2ActivationThreshold ?? ""
+  );
+  const [expansionConditions, setExpansionConditions] = useState(
+    investigation.q2ExpansionConditions ?? ""
   );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -79,12 +85,14 @@ export function Q2Evidence({ workflowId, investigation, onComplete }: QProps) {
     setSaving(true);
     setError(null);
     try {
-      const res = await fetch(`/api/investigations/${workflowId}`, {
+      const res = await fetch(`/api/investigations/${agentId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           q2EvidenceType: evidenceType,
           q2EvidenceDescription: requiresDescription ? evidenceDescription.trim() : null,
+          q2ActivationThreshold: activationThreshold.trim() || null,
+          q2ExpansionConditions: expansionConditions.trim() || null,
           q2Complete: true,
         }),
       });
@@ -105,11 +113,10 @@ export function Q2Evidence({ workflowId, investigation, onComplete }: QProps) {
     <div className="space-y-6">
       <div>
         <h2 className="text-base font-semibold text-foreground">
-          Q2 — Existing Evidence of Value
+          Q2 — Evidence Standard
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Assess what documented or observed evidence exists that this workflow delivers measurable
-          business value.
+          Establish the evidentiary basis for this agent&apos;s continued operation, and define the conditions under which it activates or may expand scope.
         </p>
       </div>
 
@@ -137,8 +144,7 @@ export function Q2Evidence({ workflowId, investigation, onComplete }: QProps) {
 
         {evidenceType === "NONE" && (
           <div className="rounded-md border border-muted bg-muted/40 px-3 py-2.5 text-sm text-muted-foreground">
-            No evidence of value has been identified or provided. This finding will be recorded in
-            the investigation record and may influence the verdict recommendation.
+            No evidence of value has been identified or provided. This finding will create a presumption toward replacement or elimination in the posture derivation.
           </div>
         )}
 
@@ -164,6 +170,34 @@ export function Q2Evidence({ workflowId, investigation, onComplete }: QProps) {
             )}
           </div>
         )}
+
+        <div className="space-y-1.5">
+          <Label htmlFor="q2-activation-threshold">Activation threshold</Label>
+          <Textarea
+            id="q2-activation-threshold"
+            value={activationThreshold}
+            onChange={(e) => setActivationThreshold(e.target.value)}
+            placeholder="Describe the conditions under which this agent activates — what triggers it, and what input signals it requires."
+            rows={3}
+          />
+          <p className="text-[11px] text-muted-foreground">
+            DAL-X uses this to validate that activation conditions are met before issuing an authorization token.
+          </p>
+        </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="q2-expansion-conditions">Scope expansion conditions</Label>
+          <Textarea
+            id="q2-expansion-conditions"
+            value={expansionConditions}
+            onChange={(e) => setExpansionConditions(e.target.value)}
+            placeholder="Define conditions under which the agent may expand beyond its permitted purpose, or leave blank if no expansion is permitted."
+            rows={3}
+          />
+          <p className="text-[11px] text-muted-foreground">
+            Requests outside the permitted purpose that don&apos;t meet these conditions will be blocked by DAL-X.
+          </p>
+        </div>
       </div>
 
       <div className="flex items-center gap-2">
@@ -187,11 +221,7 @@ export function Q2Evidence({ workflowId, investigation, onComplete }: QProps) {
       <Separator />
 
       <p className="text-xs text-muted-foreground">
-        <span className="font-medium">Methodology note:</span> Q2 establishes the evidentiary basis
-        for continued investment. Documented evidence (quantitative metrics, A/B test results,
-        formal performance reports) carries the highest weight. Anecdotal evidence is recorded but
-        treated as insufficient on its own to justify retention. No evidence creates a presumption
-        toward replacement or elimination.
+        <span className="font-medium">Methodology note:</span> Q2 establishes the evidentiary basis for continued investment, the conditions under which this agent activates, and the boundary conditions for scope expansion. Documented evidence carries the highest weight. The activation threshold and expansion conditions are enforced by DAL-X at runtime.
       </p>
     </div>
   );

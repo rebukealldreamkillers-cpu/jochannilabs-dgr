@@ -31,16 +31,16 @@ export default async function RegistryPage({
         <div className="border rounded-lg p-10 text-center text-muted-foreground">
           <p className="text-sm font-medium">Registry not yet open</p>
           <p className="text-xs mt-1">
-            The Decision Registry opens when the engagement advances to the Registry stage.
+            The Governance Registry opens when the engagement advances to the Registry stage.
           </p>
         </div>
       </div>
     );
   }
 
-  const workflows: RegistryWorkflow[] = engagement.workflows.map((w) => {
+  const workflows: RegistryWorkflow[] = engagement.registeredAgents.map((w) => {
     const inv = w.investigation;
-    const vrd = w.verdict;
+    const gp = w.governancePosture;
     return {
       id: w.id,
       name: w.name,
@@ -49,36 +49,39 @@ export default async function RegistryPage({
       monthlyCallVolume: w.monthlyCallVolume ?? null,
       investigation: inv
         ? {
-            q6RecommendedVerdict: inv.q6RecommendedVerdict as
+            q6RecommendedPosture: inv.q6RecommendedPosture as
               | "KEEP"
               | "DOWNSIZE"
               | "REPLACE"
               | "KILL"
               | null,
             q6ReasoningChain: inv.q6ReasoningChain ?? null,
+            q6DalxEnforcementPosture: inv.q6DalxEnforcementPosture ?? null,
             completedAt: inv.completedAt?.toISOString() ?? null,
             q3AnnualizedUsd: inv.q3AnnualizedUsd ?? null,
           }
         : null,
-      verdict: vrd
+      governancePosture: gp
         ? {
-            id: vrd.id,
-            verdict: vrd.verdict as "KEEP" | "DOWNSIZE" | "REPLACE" | "KILL",
-            reason: vrd.reason,
-            evidenceSummary: vrd.evidenceSummary ?? null,
-            conditionForChange: vrd.conditionForChange,
-            estimatedAnnualSavingsUsd: vrd.estimatedAnnualSavingsUsd ?? null,
-            lockedAt: vrd.lockedAt?.toISOString() ?? null,
+            id: gp.id,
+            posture: gp.posture as "KEEP" | "DOWNSIZE" | "REPLACE" | "KILL",
+            dalxEnforcementPosture: gp.dalxEnforcementPosture,
+            reason: gp.reason,
+            evidenceSummary: gp.evidenceSummary ?? null,
+            conditionForChange: gp.conditionForChange,
+            estimatedAnnualSavingsUsd: gp.estimatedAnnualSavingsUsd ?? null,
+            lockStatus: gp.lockStatus,
+            lockedAt: gp.lockedAt?.toISOString() ?? null,
           }
         : null,
     };
   });
 
   const totalWorkflows = workflows.length;
-  const assignedCount = workflows.filter((w) => !!w.verdict).length;
-  const lockedCount = workflows.filter((w) => !!w.verdict?.lockedAt).length;
+  const assignedCount = workflows.filter((w) => !!w.governancePosture).length;
+  const lockedCount = workflows.filter((w) => w.governancePosture?.lockStatus === "LOCKED").length;
   const totalSavings = workflows.reduce((sum, w) => {
-    const s = w.verdict?.estimatedAnnualSavingsUsd;
+    const s = w.governancePosture?.estimatedAnnualSavingsUsd;
     return sum + (s ? parseFloat(s) : 0);
   }, 0);
 
@@ -101,18 +104,18 @@ export default async function RegistryPage({
           {engagement.companyName}
         </Link>
         <ChevronRight className="w-3.5 h-3.5" />
-        <span className="text-foreground font-medium">Decision Registry</span>
+        <span className="text-foreground font-medium">Governance Registry</span>
       </nav>
 
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-xl font-semibold">Decision Registry</h1>
+            <h1 className="text-xl font-semibold">Governance Registry</h1>
             <StageBadge stage={stage} />
           </div>
           <p className="text-sm text-muted-foreground mt-1">
-            {engagement.companyName} · Assign and lock a verdict for each workflow
+            {engagement.companyName} · Assign and lock a governance posture for each agent
           </p>
         </div>
 
@@ -146,7 +149,7 @@ export default async function RegistryPage({
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 border rounded-lg px-5 py-4 bg-muted/20">
         <div>
           <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">
-            Workflows
+            Agents
           </p>
           <p className="text-xl font-semibold mt-0.5">{totalWorkflows}</p>
         </div>
@@ -190,7 +193,7 @@ export default async function RegistryPage({
       {/* Registry table */}
       {workflows.length === 0 ? (
         <div className="border rounded-lg p-10 text-center text-muted-foreground">
-          <p className="text-sm">No workflows in this engagement.</p>
+          <p className="text-sm">No agents registered in this engagement.</p>
         </div>
       ) : (
         <RegistryTable workflows={workflows} />

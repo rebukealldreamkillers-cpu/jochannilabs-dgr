@@ -1,47 +1,63 @@
 import Link from "next/link";
-import { ArrowRight, CheckCircle2, ChevronRight } from "lucide-react";
+import { ArrowRight, CheckCircle2, Shield } from "lucide-react";
 
-const VERDICTS = [
+const POSTURES = [
   {
     label: "KEEP",
     color: "text-emerald-700",
     bg: "bg-emerald-50 border-emerald-200",
-    description: "Documented evidence supports the current cost. Continue investing.",
+    description: "Documented evidence supports the current cost. DAL-X authorizes execution and monitors cost bounds.",
   },
   {
     label: "DOWNSIZE",
     color: "text-amber-700",
     bg: "bg-amber-50 border-amber-200",
-    description: "The requirement is real — the mechanism is overbuilt. Lower-cost path identified.",
+    description: "The requirement is real — the mechanism is overbuilt. DAL-X enforces the lower-cost constraint.",
   },
   {
     label: "REPLACE",
     color: "text-orange-700",
     bg: "bg-orange-50 border-orange-200",
-    description: "Insufficient evidence for the current cost. A viable alternative exists.",
+    description: "Insufficient evidence for the current cost. DAL-X blocks execution until the alternative is validated.",
   },
   {
     label: "KILL",
     color: "text-red-700",
     bg: "bg-red-50 border-red-200",
-    description: "No evidence of value. No viable alternative. Reallocate the budget.",
+    description: "No evidence of value. No viable alternative. DAL-X intercepts and escalates all execution attempts.",
   },
 ];
 
 const QUESTIONS = [
-  { num: "Q1", text: "Named executive sponsor and authorized business requirement" },
-  { num: "Q2", text: "Evidence that the workflow satisfies the requirement" },
-  { num: "Q3", text: "Current mechanism cost baseline — per call and at volume" },
-  { num: "Q4", text: "A specific, logically viable lower-cost alternative" },
-  { num: "Q5", text: "Operational and regulatory risk register with named owners" },
-  { num: "Q6", text: "Verdict: KEEP, DOWNSIZE, REPLACE, or KILL" },
+  { num: "Q1", text: "Named executive sponsor, authority chain, and permitted purpose" },
+  { num: "Q2", text: "Evidence standard and the conditions that activate or expand scope" },
+  { num: "Q3", text: "Cost baseline, DAL-X interception threshold, and escalation threshold" },
+  { num: "Q4", text: "A specific, logically viable lower-cost alternative mechanism" },
+  { num: "Q5", text: "Risk conditions with named reviewers and DAL-X escalation triggers" },
+  { num: "Q6", text: "Governance posture: KEEP, DOWNSIZE, REPLACE, or KILL" },
 ];
 
 const STAGES = [
-  { week: "Week 1", title: "Pipeline Census", description: "Document every AI workflow in scope, its business purpose, and its current monthly cost." },
-  { week: "Week 2", title: "Investigation", description: "Answer six governing questions for each workflow. Evidence determines the verdict — not assumption." },
-  { week: "Week 3", title: "Decision Registry", description: "Lock each verdict with a reason, an evidence summary, and a condition for change." },
-  { week: "Week 4", title: "Defense Files", description: "Deliver a signed Defense File per workflow. The sponsor either accepts the verdict or records a stated departure." },
+  {
+    week: "Week 1",
+    title: "Agent Census",
+    description: "Document every AI agent in scope — its business purpose, permitted authority, and current monthly cost.",
+  },
+  {
+    week: "Week 2",
+    title: "Investigation",
+    description: "Answer six governing questions per agent. Evidence determines the governance posture — not assumption.",
+  },
+  {
+    week: "Week 3",
+    title: "Governance Registry",
+    description: "Lock each posture with a reason, an evidence summary, and the condition under which DAL-X enforcement changes.",
+  },
+  {
+    week: "Week 4",
+    title: "Defense Files",
+    description: "Each executive sponsor accepts or records a departure. Their decision authorizes DAL-X runtime enforcement.",
+  },
 ];
 
 export default function HomePage() {
@@ -69,15 +85,15 @@ export default function HomePage() {
       {/* Hero */}
       <section className="max-w-3xl mx-auto px-6 pt-20 pb-16 text-center">
         <p className="text-xs font-medium uppercase tracking-widest text-zinc-400 mb-4">
-          Fixed-scope · Four weeks · Verdict-first
+          Fixed-scope · Four weeks · DAL-X enforced
         </p>
         <h1 className="text-4xl sm:text-5xl font-semibold leading-tight tracking-tight">
-          Does this AI workflow still deserve its budget?
+          Do your AI agents operate under governance authority?
         </h1>
         <p className="mt-6 text-lg text-zinc-500 leading-relaxed max-w-2xl mx-auto">
-          The Decision Governance Review is a structured, four-week diagnostic that produces a
-          verdict on every AI workflow in scope — KEEP, DOWNSIZE, REPLACE, or KILL — backed
-          by documented evidence and signed by the named executive sponsor.
+          The Decision Governance Review is a structured, four-week assessment that produces a
+          signed governance posture for every AI agent in scope — and a machine-readable policy
+          configuration that DAL-X enforces at runtime.
         </p>
         <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
           <Link
@@ -96,6 +112,46 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Three-act principle */}
+      <section className="border-y bg-zinc-950 text-zinc-100">
+        <div className="max-w-3xl mx-auto px-6 py-12">
+          <p className="text-xs font-medium uppercase tracking-widest text-zinc-400 mb-6">
+            Three-act governance
+          </p>
+          <div className="grid sm:grid-cols-3 gap-6 text-sm">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-mono text-zinc-500">ACT 1</span>
+              </div>
+              <p className="font-semibold text-zinc-100">Jochanni Labs assesses</p>
+              <p className="text-zinc-400 leading-relaxed">
+                Six governing questions per agent. Evidence determines the proposed governance posture.
+              </p>
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-mono text-zinc-500">ACT 2</span>
+              </div>
+              <p className="font-semibold text-zinc-100">Sponsor authorizes</p>
+              <p className="text-zinc-400 leading-relaxed">
+                The named executive sponsor accepts the posture or records a stated departure.
+                No authority, no enforcement.
+              </p>
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-mono text-zinc-500">ACT 3</span>
+              </div>
+              <p className="font-semibold text-zinc-100">DAL-X enforces</p>
+              <p className="text-zinc-400 leading-relaxed">
+                The signed Governance Manifest becomes the runtime policy. DAL-X intercepts,
+                escalates, and audits against it.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Problem statement */}
       <section className="bg-zinc-50 border-y">
         <div className="max-w-3xl mx-auto px-6 py-16">
@@ -106,22 +162,22 @@ export default function HomePage() {
             <div className="space-y-2">
               <p className="font-semibold">AI spend is growing — governance is not.</p>
               <p className="text-zinc-500 leading-relaxed">
-                Most organizations add AI workflows faster than they can assess them. Budget
+                Most organizations add AI agents faster than they can assess them. Budget
                 accumulates. Accountability does not.
               </p>
             </div>
             <div className="space-y-2">
               <p className="font-semibold">Internal review is not independent.</p>
               <p className="text-zinc-500 leading-relaxed">
-                Teams that built the workflow are rarely positioned to evaluate whether it
+                Teams that built the agent are rarely positioned to evaluate whether it
                 still earns its cost. Sunken cost reasoning dominates.
               </p>
             </div>
             <div className="space-y-2">
-              <p className="font-semibold">Verdicts require evidence, not opinion.</p>
+              <p className="font-semibold">Enforcement requires authority.</p>
               <p className="text-zinc-500 leading-relaxed">
-                A defensible verdict names the evidence, the risk, and the condition under
-                which it should be revisited. Most current reviews do none of this.
+                A governance posture without a signed authority chain cannot be enforced.
+                DAL-X requires one to activate runtime interception.
               </p>
             </div>
           </div>
@@ -133,7 +189,7 @@ export default function HomePage() {
         <p className="text-xs font-medium uppercase tracking-widest text-zinc-400 mb-2">
           How it works
         </p>
-        <h2 className="text-2xl font-semibold mb-10">Four weeks. One verdict per workflow.</h2>
+        <h2 className="text-2xl font-semibold mb-10">Four weeks. One posture per agent.</h2>
         <div className="space-y-6">
           {STAGES.map((s, i) => (
             <div key={i} className="flex gap-5">
@@ -165,24 +221,29 @@ export default function HomePage() {
             ))}
           </div>
           <p className="mt-6 text-sm text-zinc-500 leading-relaxed">
-            The verdict follows the first five answers. It is not asserted independently of
-            them. Every verdict carries an exact reason, the evidence behind it, and the
-            condition that would change it.
+            The governance posture follows the first five answers. It is not asserted independently.
+            Every posture carries an exact reason, the evidence behind it, and the condition under
+            which DAL-X enforcement changes.
           </p>
         </div>
       </section>
 
-      {/* Four verdicts */}
+      {/* Four postures */}
       <section className="max-w-3xl mx-auto px-6 py-16">
-        <p className="text-xs font-medium uppercase tracking-widest text-zinc-400 mb-2">
-          The outcomes
-        </p>
-        <h2 className="text-2xl font-semibold mb-8">Four possible verdicts.</h2>
+        <div className="flex items-center gap-2 mb-2">
+          <p className="text-xs font-medium uppercase tracking-widest text-zinc-400">
+            The outcomes
+          </p>
+        </div>
+        <div className="flex items-center gap-2 mb-8">
+          <h2 className="text-2xl font-semibold">Four governance postures.</h2>
+          <Shield className="w-5 h-5 text-zinc-400" />
+        </div>
         <div className="grid sm:grid-cols-2 gap-4">
-          {VERDICTS.map((v) => (
-            <div key={v.label} className={`border rounded-lg px-5 py-4 ${v.bg}`}>
-              <p className={`text-sm font-bold tracking-wider ${v.color}`}>{v.label}</p>
-              <p className="text-sm text-zinc-600 mt-1 leading-relaxed">{v.description}</p>
+          {POSTURES.map((p) => (
+            <div key={p.label} className={`border rounded-lg px-5 py-4 ${p.bg}`}>
+              <p className={`text-sm font-bold tracking-wider ${p.color}`}>{p.label}</p>
+              <p className="text-sm text-zinc-600 mt-1 leading-relaxed">{p.description}</p>
             </div>
           ))}
         </div>
@@ -197,11 +258,11 @@ export default function HomePage() {
           <h2 className="text-2xl font-semibold mb-8">What you receive.</h2>
           <div className="grid sm:grid-cols-2 gap-4 text-sm">
             {[
-              "Pipeline Census — every AI workflow documented with cost and evidence status",
-              "Investigation records — six-question answers per workflow, on record",
-              "Decision Registry — locked verdict per workflow with reason and condition for change",
-              "Defense Files — one signed document per workflow, executed by the named executive sponsor",
-              "Governance Manifest — machine-readable JSON export for your governance system",
+              "Agent Census — every AI agent documented with permitted purpose and monthly cost",
+              "Investigation records — six-question answers per agent, on record",
+              "Governance Registry — locked posture per agent with reason and condition for change",
+              "Defense Files — one signed document per agent, executed by the named executive sponsor",
+              "Governance Manifest — machine-readable DAL-X policy configuration (JSON)",
               "60-day checkpoint — follow-up on whether recommended actions were carried out",
             ].map((item, i) => (
               <div key={i} className="flex items-start gap-2.5">
@@ -215,7 +276,7 @@ export default function HomePage() {
 
       {/* CTA */}
       <section className="max-w-3xl mx-auto px-6 py-20 text-center">
-        <h2 className="text-2xl font-semibold">Ready to audit your AI spend?</h2>
+        <h2 className="text-2xl font-semibold">Ready to govern your AI agents?</h2>
         <p className="mt-3 text-zinc-500 text-sm leading-relaxed">
           Fixed price. Four weeks. Conducted under mutual NDA. Response within one business day.
         </p>

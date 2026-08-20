@@ -20,7 +20,7 @@ type AlternativeType = "RULES_BASED" | "RPA" | "SMALLER_MODEL" | "NO_MODEL" | "O
 type Feasibility = "LOW" | "MEDIUM" | "HIGH";
 
 type QProps = {
-  workflowId: string;
+  agentId: string;
   investigation: Investigation;
   onComplete: () => void;
 };
@@ -41,7 +41,7 @@ const FEASIBILITY_LABELS: Record<Feasibility, string> = {
 
 const NULL_SENTINEL = "__none__";
 
-export function Q4Alternative({ workflowId, investigation, onComplete }: QProps) {
+export function Q4Alternative({ agentId, investigation, onComplete }: QProps) {
   const [alternativeType, setAlternativeType] = useState<AlternativeType | null>(
     (investigation.q4AlternativeType as AlternativeType | null) ?? null
   );
@@ -56,6 +56,12 @@ export function Q4Alternative({ workflowId, investigation, onComplete }: QProps)
   const [feasibility, setFeasibility] = useState<Feasibility | null>(
     (investigation.q4Feasibility as Feasibility | null) ?? null
   );
+  const [migrationConditions, setMigrationConditions] = useState(
+    investigation.q4MigrationConditions ?? ""
+  );
+  const [clientImplementationRequired, setClientImplementationRequired] = useState(
+    investigation.q4ClientImplementationRequired ?? true
+  );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -66,7 +72,7 @@ export function Q4Alternative({ workflowId, investigation, onComplete }: QProps)
     setSaving(true);
     setError(null);
     try {
-      const res = await fetch(`/api/investigations/${workflowId}`, {
+      const res = await fetch(`/api/investigations/${agentId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -76,6 +82,8 @@ export function Q4Alternative({ workflowId, investigation, onComplete }: QProps)
             ? estimatedCostPerCall.trim()
             : null,
           q4Feasibility: showCostFeasibility ? feasibility : null,
+          q4MigrationConditions: showCostFeasibility ? migrationConditions.trim() || null : null,
+          q4ClientImplementationRequired: showCostFeasibility ? clientImplementationRequired : true,
           q4Complete: true,
         }),
       });
@@ -99,8 +107,8 @@ export function Q4Alternative({ workflowId, investigation, onComplete }: QProps)
           Q4 — Lower-Cost Alternative Mechanism
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Evaluate whether a logically viable lower-cost mechanism could perform this workflow&apos;s
-          function.
+          Evaluate whether a logically viable lower-cost mechanism could perform this agent&apos;s
+          function. If one exists, the client&apos;s engineering team must validate and implement it.
         </p>
       </div>
 
@@ -119,7 +127,7 @@ export function Q4Alternative({ workflowId, investigation, onComplete }: QProps)
               <SelectValue placeholder="Select alternative type" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value={NULL_SENTINEL}>No viable alternative identified</SelectItem>
+              <SelectItem value={NULL_SENTINEL}>Not yet assessed</SelectItem>
               {(Object.keys(ALTERNATIVE_LABELS) as AlternativeType[]).map((key) => (
                 <SelectItem key={key} value={key}>
                   {ALTERNATIVE_LABELS[key]}
@@ -132,7 +140,7 @@ export function Q4Alternative({ workflowId, investigation, onComplete }: QProps)
         {alternativeType === "NO_MODEL" && (
           <div className="rounded-md border border-blue-200 bg-blue-50 px-3 py-2.5 text-sm text-blue-800 dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-400">
             No logically viable lower-cost alternative identified. This finding supports a{" "}
-            <span className="font-semibold">Keep</span> verdict.
+            <span className="font-semibold">Keep</span> governance posture if documented evidence also exists.
           </div>
         )}
 
@@ -191,13 +199,52 @@ export function Q4Alternative({ workflowId, investigation, onComplete }: QProps)
                 </SelectContent>
               </Select>
             </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="q4-migration-conditions">Migration conditions</Label>
+              <Textarea
+                id="q4-migration-conditions"
+                value={migrationConditions}
+                onChange={(e) => setMigrationConditions(e.target.value)}
+                placeholder="Describe the conditions that must be met before migration to this alternative can proceed — dependencies, testing requirements, sign-off needed."
+                rows={3}
+              />
+              <p className="text-[11px] text-muted-foreground">
+                Migration authority does not transfer until the client&apos;s engineering team validates these conditions are met.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                role="switch"
+                aria-checked={clientImplementationRequired}
+                onClick={() => setClientImplementationRequired((v) => !v)}
+                className={[
+                  "relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                  clientImplementationRequired ? "bg-primary" : "bg-input",
+                ].join(" ")}
+              >
+                <span
+                  className={[
+                    "pointer-events-none inline-block h-4 w-4 rounded-full bg-background shadow-lg ring-0 transition-transform",
+                    clientImplementationRequired ? "translate-x-4" : "translate-x-0",
+                  ].join(" ")}
+                />
+              </button>
+              <Label
+                className="cursor-pointer select-none text-sm"
+                onClick={() => setClientImplementationRequired((v) => !v)}
+              >
+                Client engineering implementation required
+              </Label>
+            </div>
+            <p className="text-[11px] text-muted-foreground -mt-2">
+              Jochanni Labs proposes the alternative. The client&apos;s engineering team validates and builds it before DAL-X execution authority transfers.
+            </p>
           </>
         )}
       </div>
-
-      <p className="rounded-md border border-muted bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
-        Proposed by Jochanni Labs — requires client engineering validation.
-      </p>
 
       {error && (
         <p className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
@@ -215,11 +262,7 @@ export function Q4Alternative({ workflowId, investigation, onComplete }: QProps)
       <Separator />
 
       <p className="text-xs text-muted-foreground">
-        <span className="font-medium">Methodology note:</span> Q4 tests whether the current AI
-        model is the lowest-cost mechanism capable of delivering the required outcome. The
-        feasibility rating reflects implementation complexity from a client engineering perspective
-        and must be validated by the client&apos;s technical team before being used to support a
-        Downsize or Replace verdict.
+        <span className="font-medium">Methodology note:</span> Q4 tests whether the current agent is the lowest-cost mechanism capable of delivering the required outcome. Jochanni Labs proposes the alternative — the client&apos;s engineering team must validate and implement it. DAL-X execution authority does not transfer to the alternative until implementation is confirmed and the governance posture is updated.
       </p>
     </div>
   );

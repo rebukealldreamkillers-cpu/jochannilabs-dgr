@@ -24,7 +24,18 @@
       "Bash(git push *)",
       "Bash(vercel *)",
       "Bash(npm run *)",
-      "Bash(npx vercel *)"
+      "Bash(npx vercel *)",
+      "Bash(curl -s https://api.clerk.com/v1/users -H 'Authorization: Bearer sk_test_UIY4hYlAtvzT5RhFlZSclbuJZ60FzbtN3mBh5TuS8c')",
+      "Bash(python3 -c \"import sys,json; users=json.load\\(sys.stdin\\); [print\\(u['id'], u.get\\('email_addresses',[{}]\\)[0].get\\('email_address',''\\)\\) for u in users]\")",
+      "Bash(curl *)",
+      "Bash(node -e ' *)",
+      "Bash(npx tsx -e ' *)",
+      "Bash(node --import tsx/esm -e ' *)",
+      "Bash(echo \"exit: $?\")",
+      "Bash(npx next *)",
+      "WebFetch(domain:www.decisionauthoritylayer.ai)",
+      "Bash(npx tsx *)",
+      "Bash(echo \"Exit: $?\")"
     ]
   }
 }

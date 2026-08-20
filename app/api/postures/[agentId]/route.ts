@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { getVerdict, upsertVerdict, lockVerdict } from "@/lib/verdicts";
+import { getPosture, upsertPosture, lockPosture, deriveDALXEnforcementPosture } from "@/lib/postures";
 import { z } from "zod";
 
 const patchSchema = z.object({
-  verdict: z.enum(["KEEP", "DOWNSIZE", "REPLACE", "KILL"]).optional(),
+  posture: z.enum(["KEEP", "DOWNSIZE", "REPLACE", "KILL"]).optional(),
   reason: z.string().min(1).optional(),
   evidenceSummary: z.string().optional().nullable(),
   conditionForChange: z.string().min(1).optional(),
@@ -14,47 +14,48 @@ const patchSchema = z.object({
 
 export async function GET(
   _: Request,
-  { params }: { params: Promise<{ workflowId: string }> },
+  { params }: { params: Promise<{ agentId: string }> },
 ) {
   const { userId } = await auth();
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { workflowId } = await params;
-  const verdict = await getVerdict(workflowId);
-  return NextResponse.json(verdict ?? null);
+  const { agentId } = await params;
+  const posture = await getPosture(agentId);
+  return NextResponse.json(posture ?? null);
 }
 
 export async function PATCH(
   req: Request,
-  { params }: { params: Promise<{ workflowId: string }> },
+  { params }: { params: Promise<{ agentId: string }> },
 ) {
   const { userId } = await auth();
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { workflowId } = await params;
+  const { agentId } = await params;
   const body = await req.json();
   const parsed = patchSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ errors: parsed.error.flatten().fieldErrors }, { status: 422 });
   }
 
-  const existing = await getVerdict(workflowId);
+  const existing = await getPosture(agentId);
   const { lock, ...fields } = parsed.data;
 
-  // Reject modifications to locked verdicts (unless it's already locked and we're just locking again)
-  const hasDataFields = fields.verdict || fields.reason || fields.conditionForChange;
-  if (hasDataFields && existing?.lockedAt) {
+  const hasDataFields = fields.posture || fields.reason || fields.conditionForChange;
+  if (hasDataFields && existing?.lockStatus === "LOCKED") {
     return NextResponse.json(
-      { error: "This verdict is locked and cannot be modified." },
+      { error: "This governance posture is locked and cannot be modified." },
       { status: 409 },
     );
   }
 
   let result;
 
-  if (fields.verdict && fields.reason && fields.conditionForChange) {
-    result = await upsertVerdict(workflowId, {
-      verdict: fields.verdict,
+  if (fields.posture && fields.reason && fields.conditionForChange) {
+    const dalxEnforcementPosture = deriveDALXEnforcementPosture(fields.posture);
+    result = await upsertPosture(agentId, {
+      posture: fields.posture,
+      dalxEnforcementPosture,
       reason: fields.reason,
       evidenceSummary: fields.evidenceSummary,
       conditionForChange: fields.conditionForChange,
@@ -67,11 +68,11 @@ export async function PATCH(
     const target = result ?? existing;
     if (!target) {
       return NextResponse.json(
-        { error: "Save the verdict before locking." },
+        { error: "Save the governance posture before locking." },
         { status: 422 },
       );
     }
-    result = await lockVerdict(workflowId);
+    result = await lockPosture(agentId);
   }
 
   return NextResponse.json(result ?? existing ?? null);

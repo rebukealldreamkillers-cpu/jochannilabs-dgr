@@ -1,24 +1,24 @@
 import { db } from "@/db";
-import { defenseFiles, workflows, investigations, verdicts, engagements } from "@/db/schema";
+import { defenseFiles, registeredAgents } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
-export async function getOrCreateDefenseFile(workflowId: string) {
+export async function getOrCreateDefenseFile(agentId: string) {
   const existing = await db.query.defenseFiles.findFirst({
-    where: eq(defenseFiles.workflowId, workflowId),
+    where: eq(defenseFiles.agentId, agentId),
   });
   if (existing) return existing;
 
   const [created] = await db
     .insert(defenseFiles)
-    .values({ workflowId, status: "DRAFT" })
+    .values({ agentId, status: "DRAFT" })
     .returning();
   return created;
 }
 
-export async function getDefenseFile(workflowId: string) {
+export async function getDefenseFile(agentId: string) {
   return db.query.defenseFiles.findFirst({
-    where: eq(defenseFiles.workflowId, workflowId),
+    where: eq(defenseFiles.agentId, agentId),
   });
 }
 
@@ -26,34 +26,34 @@ export async function getDefenseFileByToken(token: string) {
   return db.query.defenseFiles.findFirst({
     where: eq(defenseFiles.signatureToken, token),
     with: {
-      workflow: {
+      agent: {
         with: {
           engagement: true,
           investigation: true,
-          verdict: true,
+          governancePosture: true,
         },
       },
     },
   });
 }
 
-export async function getDefenseFileWithFullData(workflowId: string) {
-  return db.query.workflows.findFirst({
-    where: eq(workflows.id, workflowId),
+export async function getDefenseFileWithFullData(agentId: string) {
+  return db.query.registeredAgents.findFirst({
+    where: eq(registeredAgents.id, agentId),
     with: {
       engagement: true,
       investigation: true,
-      verdict: true,
+      governancePosture: true,
       defenseFile: true,
     },
   });
 }
 
-export async function initializeSignatureToken(workflowId: string) {
+export async function initializeSignatureToken(agentId: string) {
   const token = randomUUID();
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
-  await getOrCreateDefenseFile(workflowId);
+  await getOrCreateDefenseFile(agentId);
 
   const [updated] = await db
     .update(defenseFiles)
@@ -64,7 +64,7 @@ export async function initializeSignatureToken(workflowId: string) {
       sentAt: new Date(),
       updatedAt: new Date(),
     })
-    .where(eq(defenseFiles.workflowId, workflowId))
+    .where(eq(defenseFiles.agentId, agentId))
     .returning();
   return updated;
 }
@@ -87,7 +87,7 @@ export async function acceptDefenseFile(token: string, ip: string, userAgent: st
 export async function recordSponsorOverride(
   token: string,
   override: {
-    verdict: "KEEP" | "DOWNSIZE" | "REPLACE" | "KILL";
+    posture: "KEEP" | "DOWNSIZE" | "REPLACE" | "KILL";
     rationale: string;
     sponsorName: string;
   },
@@ -98,7 +98,7 @@ export async function recordSponsorOverride(
     .update(defenseFiles)
     .set({
       status: "OVERRIDDEN",
-      sponsorOverrideVerdict: override.verdict,
+      sponsorOverridePosture: override.posture,
       sponsorOverrideRationale: override.rationale,
       sponsorOverrideName: override.sponsorName,
       sponsorOverrideAt: new Date(),
@@ -113,7 +113,7 @@ export async function recordSponsorOverride(
 }
 
 export async function updateTrackingKey(
-  workflowId: string,
+  agentId: string,
   data: {
     trackingKey: string;
     trackingSystem: string;
@@ -123,7 +123,7 @@ export async function updateTrackingKey(
   const [updated] = await db
     .update(defenseFiles)
     .set({ ...data, updatedAt: new Date() })
-    .where(eq(defenseFiles.workflowId, workflowId))
+    .where(eq(defenseFiles.agentId, agentId))
     .returning();
   return updated;
 }

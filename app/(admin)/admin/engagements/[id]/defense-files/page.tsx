@@ -39,23 +39,23 @@ export default async function DefenseFilesPage({
     );
   }
 
-  // Ensure defense file records exist for all workflows
+  // Ensure defense file records exist for all registered agents
   await Promise.all(
-    engagement.workflows.map((w) => getOrCreateDefenseFile(w.id)),
+    engagement.registeredAgents.map((w) => getOrCreateDefenseFile(w.id)),
   );
 
   // Re-fetch to get the updated defense file data
   const engagementFresh = await getEngagement(id);
   if (!engagementFresh) notFound();
 
-  const workflows: DefenseFileWorkflow[] = engagementFresh.workflows.map((w) => ({
+  const workflows: DefenseFileWorkflow[] = engagementFresh.registeredAgents.map((w) => ({
     id: w.id,
     name: w.name,
     businessOutcome: w.businessOutcome,
-    verdict: w.verdict
+    governancePosture: w.governancePosture
       ? {
-          verdict: w.verdict.verdict as "KEEP" | "DOWNSIZE" | "REPLACE" | "KILL",
-          lockedAt: w.verdict.lockedAt?.toISOString() ?? null,
+          posture: w.governancePosture.posture as "KEEP" | "DOWNSIZE" | "REPLACE" | "KILL",
+          lockStatus: w.governancePosture.lockStatus,
         }
       : null,
     investigation: w.investigation
@@ -70,8 +70,8 @@ export default async function DefenseFilesPage({
           status: w.defenseFile.status as "DRAFT" | "SENT" | "SIGNED" | "OVERRIDDEN",
           signatureToken: w.defenseFile.signatureToken ?? null,
           signedAt: w.defenseFile.signedAt?.toISOString() ?? null,
-          sponsorOverrideVerdict:
-            (w.defenseFile.sponsorOverrideVerdict as "KEEP" | "DOWNSIZE" | "REPLACE" | "KILL" | null) ??
+          sponsorOverridePosture:
+            (w.defenseFile.sponsorOverridePosture as "KEEP" | "DOWNSIZE" | "REPLACE" | "KILL" | null) ??
             null,
           sponsorOverrideName: w.defenseFile.sponsorOverrideName ?? null,
           trackingKey: w.defenseFile.trackingKey ?? null,

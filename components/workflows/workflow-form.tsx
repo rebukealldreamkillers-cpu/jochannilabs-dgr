@@ -21,11 +21,11 @@ import { Loader2 } from "lucide-react";
 type Props = {
   engagementId: string;
   defaultValues?: Partial<WorkflowInput>;
-  workflowId?: string; // if present, we're editing
+  agentId?: string; // if present, we're editing
   returnUrl: string;
 };
 
-export function WorkflowForm({ engagementId, defaultValues, workflowId, returnUrl }: Props) {
+export function WorkflowForm({ engagementId, defaultValues, agentId, returnUrl }: Props) {
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
 
@@ -46,8 +46,8 @@ export function WorkflowForm({ engagementId, defaultValues, workflowId, returnUr
   async function onSubmit(data: WorkflowInput) {
     setServerError(null);
 
-    const url = workflowId ? `/api/workflows/${workflowId}` : "/api/workflows";
-    const method = workflowId ? "PATCH" : "POST";
+    const url = agentId ? `/api/agents/${agentId}` : "/api/agents";
+    const method = agentId ? "PATCH" : "POST";
 
     const res = await fetch(url, {
       method,
@@ -68,22 +68,37 @@ export function WorkflowForm({ engagementId, defaultValues, workflowId, returnUr
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <input type="hidden" {...register("engagementId")} value={engagementId} />
 
-      {/* Workflow name */}
+      {/* Agent name */}
       <div className="space-y-1.5">
-        <Label htmlFor="name">Workflow name</Label>
+        <Label htmlFor="name">Agent name</Label>
         <Input
           id="name"
-          placeholder="e.g. RCM denial appeal drafting"
+          placeholder="e.g. RCM denial appeal drafting agent"
           {...register("name")}
         />
         {errors.name && <p className="text-xs text-red-600">{errors.name.message}</p>}
       </div>
 
+      {/* Permitted purpose */}
+      <div className="space-y-1.5">
+        <Label htmlFor="permittedPurpose">Permitted purpose</Label>
+        <Textarea
+          id="permittedPurpose"
+          placeholder="e.g. Draft denial appeal letters for Medicare claims under $5,000 in the billing department."
+          className="min-h-[80px] resize-none"
+          {...register("permittedPurpose")}
+        />
+        <p className="text-[11px] text-muted-foreground">
+          The specific, bounded task this agent is authorized to perform. DAL-X uses this as the scope boundary for authorization.
+        </p>
+        {errors.permittedPurpose && (
+          <p className="text-xs text-red-600">{errors.permittedPurpose.message}</p>
+        )}
+      </div>
+
       {/* Business outcome */}
       <div className="space-y-1.5">
-        <Label htmlFor="businessOutcome">
-          Business outcome it claims to satisfy
-        </Label>
+        <Label htmlFor="businessOutcome">Business outcome it claims to satisfy</Label>
         <Textarea
           id="businessOutcome"
           placeholder="e.g. Reduce manual appeal drafting time by 60%, targeting $180k annual labour savings in the billing team."
@@ -148,7 +163,7 @@ export function WorkflowForm({ engagementId, defaultValues, workflowId, returnUr
 
       {/* Existing evidence */}
       <div className="space-y-1.5">
-        <Label>Existing evidence of acceptance</Label>
+        <Label>Existing evidence of business acceptance</Label>
         <Select
           defaultValue={defaultValues?.existingEvidenceStatus ?? "NONE"}
           onValueChange={(v: string | null) =>
@@ -180,7 +195,7 @@ export function WorkflowForm({ engagementId, defaultValues, workflowId, returnUr
       <div className="flex gap-3 pt-2">
         <Button type="submit" disabled={isSubmitting}>
           {isSubmitting && <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />}
-          {workflowId ? "Save changes" : "Add workflow"}
+          {agentId ? "Save changes" : "Register agent"}
         </Button>
         <button
           type="button"

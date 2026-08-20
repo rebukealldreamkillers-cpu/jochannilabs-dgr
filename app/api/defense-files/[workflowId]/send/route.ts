@@ -15,9 +15,9 @@ export async function POST(
   const data = await getDefenseFileWithFullData(workflowId);
 
   if (!data) return NextResponse.json({ error: "Workflow not found" }, { status: 404 });
-  if (!data.verdict?.lockedAt) {
+  if (data.governancePosture?.lockStatus !== "LOCKED") {
     return NextResponse.json(
-      { error: "Verdict must be locked before sending the Defense File." },
+      { error: "Governance posture must be locked before sending the Defense File." },
       { status: 422 },
     );
   }
@@ -38,7 +38,7 @@ export async function POST(
 
   await sendEmail({
     to: sponsorEmail,
-    subject: `Decision Defense File ready for your signature — ${data.name}`,
+    subject: `Governance Defense File ready for your signature — ${data.name}`,
     html: sponsorSignatureRequestEmail(
       sponsorName,
       data.name,

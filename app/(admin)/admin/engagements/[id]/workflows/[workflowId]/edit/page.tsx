@@ -19,7 +19,7 @@ export default async function EditWorkflowPage({
     return (
       <div className="p-8 max-w-2xl mx-auto">
         <p className="text-sm text-muted-foreground">
-          Workflows can only be edited during the Census stage.
+          Agents can only be edited during the Census stage.
         </p>
       </div>
     );
@@ -35,22 +35,23 @@ export default async function EditWorkflowPage({
           {engagement.companyName}
         </Link>
         <ChevronRight className="w-3.5 h-3.5" />
-        <span className="text-foreground font-medium">Edit Workflow</span>
+        <span className="text-foreground font-medium">Edit Agent</span>
       </nav>
 
       <div>
-        <h1 className="text-xl font-semibold">Edit workflow</h1>
+        <h1 className="text-xl font-semibold">Edit registered agent</h1>
         <p className="text-sm text-muted-foreground mt-1">{workflow.name}</p>
       </div>
 
       <div className="border rounded-lg p-6 bg-background">
         <WorkflowForm
           engagementId={id}
-          workflowId={workflowId}
+          agentId={workflowId}
           returnUrl={`/admin/engagements/${id}`}
           defaultValues={{
             engagementId: id,
             name: workflow.name,
+            permittedPurpose: workflow.permittedPurpose ?? undefined,
             businessOutcome: workflow.businessOutcome,
             costPerCallUsd: workflow.costPerCallUsd ?? undefined,
             monthlyCallVolume: workflow.monthlyCallVolume?.toString() ?? undefined,

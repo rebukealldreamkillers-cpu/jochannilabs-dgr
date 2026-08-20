@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { engagements, workflows, investigations, verdicts, defenseFiles, governanceManifests } from "@/db/schema";
+import { engagements, registeredAgents, investigations, governancePostures, defenseFiles, governanceManifests } from "@/db/schema";
 import { eq, desc, and, isNull } from "drizzle-orm";
 import type { Engagement } from "@/db/schema";
 
@@ -26,12 +26,16 @@ export async function getEngagements() {
   return db.query.engagements.findMany({
     orderBy: [desc(engagements.createdAt)],
     with: {
-      workflows: {
-        where: isNull(workflows.deletedAt),
+      registeredAgents: {
+        where: isNull(registeredAgents.deletedAt),
         with: {
-          verdict: true,
+          governancePosture: true,
           investigation: true,
         },
+      },
+      governanceManifests: {
+        orderBy: [desc(governanceManifests.version)],
+        limit: 1,
       },
     },
   });
@@ -41,11 +45,11 @@ export async function getEngagement(id: string) {
   return db.query.engagements.findFirst({
     where: eq(engagements.id, id),
     with: {
-      workflows: {
-        where: isNull(workflows.deletedAt),
-        orderBy: [workflows.sortOrder],
+      registeredAgents: {
+        where: isNull(registeredAgents.deletedAt),
+        orderBy: [registeredAgents.sortOrder],
         with: {
-          verdict: true,
+          governancePosture: true,
           investigation: true,
           defenseFile: true,
         },
@@ -74,7 +78,7 @@ export async function createEngagement(data: {
 export async function advanceEngagementStage(id: string): Promise<Engagement> {
   const engagement = await db.query.engagements.findFirst({
     where: eq(engagements.id, id),
-    with: { workflows: { where: isNull(workflows.deletedAt) } },
+    with: { registeredAgents: { where: isNull(registeredAgents.deletedAt) } },
   });
 
   if (!engagement) throw new Error("Engagement not found");
@@ -99,37 +103,37 @@ export async function advanceEngagementStage(id: string): Promise<Engagement> {
 }
 
 async function validateStageGate(
-  engagement: Engagement & { workflows: Array<{ id: string }> },
+  engagement: Engagement & { registeredAgents: Array<{ id: string }> },
   nextStage: EngagementStage,
 ) {
   if (nextStage === "INVESTIGATION") {
-    if (engagement.workflows.length === 0) {
-      throw new Error("Add at least one workflow before advancing to Investigation.");
+    if (engagement.registeredAgents.length === 0) {
+      throw new Error("Register at least one AI agent before advancing to Investigation.");
     }
   }
 
   if (nextStage === "REGISTRY") {
-    const workflowIds = engagement.workflows.map((w) => w.id);
-    if (workflowIds.length === 0) throw new Error("No workflows found.");
+    const agentIds = engagement.registeredAgents.map((a) => a.id);
+    if (agentIds.length === 0) throw new Error("No registered agents found.");
     const complete = await db.query.investigations.findMany({
       where: and(
-        ...workflowIds.map((id) => eq(investigations.workflowId, id)),
+        ...agentIds.map((id) => eq(investigations.agentId, id)),
       ),
     });
-    if (complete.length < workflowIds.length) {
-      throw new Error("All workflows must have a completed investigation before advancing.");
+    if (complete.length < agentIds.length) {
+      throw new Error("All agents must have a completed investigation before advancing.");
     }
   }
 
   if (nextStage === "DEFENSE_FILES") {
-    const workflowIds = engagement.workflows.map((w) => w.id);
-    const allVerdicts = await db.query.verdicts.findMany({
+    const agentIds = engagement.registeredAgents.map((a) => a.id);
+    const allPostures = await db.query.governancePostures.findMany({
       where: and(
-        ...workflowIds.map((id) => eq(verdicts.workflowId, id)),
+        ...agentIds.map((id) => eq(governancePostures.agentId, id)),
       ),
     });
-    if (allVerdicts.length < workflowIds.length) {
-      throw new Error("All workflows must have a verdict assigned before advancing.");
+    if (allPostures.length < agentIds.length) {
+      throw new Error("All agents must have a governance posture assigned before advancing.");
     }
   }
 }
@@ -154,25 +158,25 @@ export function pendingActions(
 
   const stage = engagement.stage as EngagementStage;
 
-  if (stage === "CENSUS" && engagement.workflows.length === 0) {
-    actions.push("Add at least one workflow to begin the census");
+  if (stage === "CENSUS" && engagement.registeredAgents.length === 0) {
+    actions.push("Register at least one AI agent to begin the census");
   }
 
   if (stage === "INVESTIGATION") {
-    const incomplete = engagement.workflows.filter((w) => !w.investigation?.completedAt);
-    if (incomplete.length > 0) actions.push(`${incomplete.length} workflow(s) pending investigation`);
+    const incomplete = engagement.registeredAgents.filter((a) => !a.investigation?.completedAt);
+    if (incomplete.length > 0) actions.push(`${incomplete.length} agent(s) pending investigation`);
   }
 
   if (stage === "REGISTRY") {
-    const unvdicted = engagement.workflows.filter((w) => !w.verdict);
-    if (unvdicted.length > 0) actions.push(`${unvdicted.length} workflow(s) need a verdict`);
+    const unpostured = engagement.registeredAgents.filter((a) => !a.governancePosture);
+    if (unpostured.length > 0) actions.push(`${unpostured.length} agent(s) need a governance posture`);
   }
 
   if (stage === "DEFENSE_FILES") {
-    const unsigned = engagement.workflows.filter(
-      (w) => !w.defenseFile || (w.defenseFile.status !== "SIGNED" && w.defenseFile.status !== "OVERRIDDEN"),
+    const unsigned = engagement.registeredAgents.filter(
+      (a) => !a.defenseFile || (a.defenseFile.status !== "SIGNED" && a.defenseFile.status !== "OVERRIDDEN"),
     );
-    if (unsigned.length > 0) actions.push(`${unsigned.length} defense file(s) awaiting sponsor signature`);
+    if (unsigned.length > 0) actions.push(`${unsigned.length} defense file(s) awaiting sponsor authorization`);
   }
 
   return actions;

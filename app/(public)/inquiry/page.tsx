@@ -79,8 +79,9 @@ export default function InquiryPage() {
           <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">Jochanni Labs</p>
           <h1 className="text-2xl font-semibold mt-2">Start a Decision Governance Review</h1>
           <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
-            A fixed-scope, four-week diagnostic that answers one question: does this AI workflow still
-            deserve its budget? Fixed price. Verdict-first. Engaged under mutual NDA.
+            A fixed-scope, four-week governance assessment for AI agents. We produce a signed
+            Governance Manifest — the DAL-X policy configuration that enforces each governance
+            posture at runtime. Fixed price. Engaged under mutual NDA.
           </p>
         </div>
 
@@ -120,7 +121,7 @@ export default function InquiryPage() {
               </Label>
               <Textarea
                 id="aiSpendDescription"
-                placeholder="e.g. Three GPT-4o workflows in our revenue cycle team — approximately $40k/year in token costs. We want to know if all three are earning their keep."
+                placeholder="e.g. Three GPT-4o agents in our revenue cycle team — approximately $40k/year in token costs. We want a governance assessment with signed postures for each."
                 className="min-h-[90px] resize-none"
                 {...register("aiSpendDescription")}
               />

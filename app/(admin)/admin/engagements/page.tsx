@@ -1,6 +1,5 @@
 import { getEngagements, pendingActions } from "@/lib/engagements";
 import { StageBadge } from "@/components/engagements/stage-badge";
-import { VerdictBadge } from "@/components/engagements/verdict-badge";
 import { ButtonLink } from "@/components/ui/button-link";
 import {
   Table,
@@ -14,6 +13,12 @@ import { Badge } from "@/components/ui/badge";
 import { AlertCircle, Plus } from "lucide-react";
 
 export const dynamic = "force-dynamic";
+
+const MANIFEST_STATUS_CONFIG: Record<string, { label: string; class: string }> = {
+  PROPOSED: { label: "Proposed", class: "bg-blue-50 text-blue-700 border-blue-200" },
+  SIGNED: { label: "Signed", class: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+  SUPERSEDED: { label: "Superseded", class: "bg-muted text-muted-foreground border-border" },
+};
 
 export default async function EngagementsPage() {
   const engagements = await getEngagements();
@@ -47,7 +52,8 @@ export default async function EngagementsPage() {
               <TableRow className="bg-muted/50">
                 <TableHead>Client</TableHead>
                 <TableHead>Stage</TableHead>
-                <TableHead>Workflows</TableHead>
+                <TableHead>Agents</TableHead>
+                <TableHead>Manifest</TableHead>
                 <TableHead>Pending</TableHead>
                 <TableHead>NDA</TableHead>
                 <TableHead>Created</TableHead>
@@ -57,8 +63,15 @@ export default async function EngagementsPage() {
             <TableBody>
               {engagements.map((engagement) => {
                 const actions = pendingActions(engagement as Parameters<typeof pendingActions>[0]);
-                const workflowCount = engagement.workflows?.length ?? 0;
-                const verdictCount = engagement.workflows?.filter((w) => w.verdict).length ?? 0;
+                const agentCount = engagement.registeredAgents?.length ?? 0;
+                const postureCount = engagement.registeredAgents?.filter((w) => w.governancePosture).length ?? 0;
+                const lockedCount = engagement.registeredAgents?.filter(
+                  (w) => w.governancePosture?.lockStatus === "LOCKED",
+                ).length ?? 0;
+                const latestManifest = engagement.governanceManifests?.[0];
+                const manifestCfg = latestManifest
+                  ? MANIFEST_STATUS_CONFIG[latestManifest.manifestStatus]
+                  : null;
 
                 return (
                   <TableRow key={engagement.id} className="hover:bg-muted/30">
@@ -73,10 +86,19 @@ export default async function EngagementsPage() {
                     </TableCell>
                     <TableCell>
                       <span className="text-sm">
-                        {workflowCount > 0
-                          ? `${verdictCount}/${workflowCount} verdicts`
+                        {agentCount > 0
+                          ? <>{lockedCount}<span className="text-muted-foreground">/{agentCount} locked</span></>
                           : <span className="text-muted-foreground">—</span>}
                       </span>
+                    </TableCell>
+                    <TableCell>
+                      {manifestCfg ? (
+                        <Badge variant="outline" className={`text-[10px] h-4 px-1.5 ${manifestCfg.class}`}>
+                          {manifestCfg.label}
+                        </Badge>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
                     </TableCell>
                     <TableCell>
                       {actions.length > 0 ? (

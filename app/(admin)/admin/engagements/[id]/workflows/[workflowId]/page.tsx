@@ -4,7 +4,7 @@ import { getEngagement } from "@/lib/engagements";
 import { getOrCreateInvestigation } from "@/lib/investigations";
 import { InvestigationWorkspace } from "@/components/investigation/investigation-workspace";
 import { StageBadge } from "@/components/engagements/stage-badge";
-import { VerdictBadge } from "@/components/engagements/verdict-badge";
+import { PostureBadge } from "@/components/engagements/verdict-badge";
 import { Separator } from "@/components/ui/separator";
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
@@ -58,7 +58,7 @@ export default async function WorkflowDetailPage({
         <StageBadge stage={stage} />
       </div>
 
-      {/* Workflow meta strip */}
+      {/* Agent meta strip */}
       <div className="flex flex-wrap gap-6 text-sm border rounded-lg px-5 py-4 bg-muted/20">
         <div>
           <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Model</p>
@@ -73,14 +73,14 @@ export default async function WorkflowDetailPage({
           </p>
         </div>
         <div>
-          <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Census evidence</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Existing evidence</p>
           <p className="mt-0.5">{workflow.existingEvidenceStatus ?? "—"}</p>
         </div>
-        {workflow.verdict && (
+        {workflow.governancePosture && (
           <div>
-            <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Verdict</p>
+            <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Governance posture</p>
             <div className="mt-0.5">
-              <VerdictBadge verdict={workflow.verdict.verdict as "KEEP" | "DOWNSIZE" | "REPLACE" | "KILL"} />
+              <PostureBadge posture={workflow.governancePosture.posture as "KEEP" | "DOWNSIZE" | "REPLACE" | "KILL"} />
             </div>
           </div>
         )}
@@ -93,12 +93,12 @@ export default async function WorkflowDetailPage({
         <div className="border rounded-lg p-10 text-center text-muted-foreground bg-background">
           <p className="text-sm font-medium">Investigation not yet open</p>
           <p className="text-xs mt-1">
-            Advance this engagement to the Investigation stage to begin the six governing questions.
+            Advance this engagement to the Investigation stage to begin the six-question governance assessment.
           </p>
         </div>
       ) : (
         <InvestigationWorkspace
-          workflowId={workflowId}
+          agentId={workflowId}
           investigation={investigation}
         />
       )}

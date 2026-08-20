@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { VerdictBadge } from "@/components/engagements/verdict-badge";
+import { PostureBadge } from "@/components/engagements/verdict-badge";
 import {
   CheckCircle2,
   Circle,
@@ -17,16 +17,16 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type Verdict = "KEEP" | "DOWNSIZE" | "REPLACE" | "KILL";
+type Posture = "KEEP" | "DOWNSIZE" | "REPLACE" | "KILL";
 type Status = "DRAFT" | "SENT" | "SIGNED" | "OVERRIDDEN";
 
 export type DefenseFileWorkflow = {
   id: string;
   name: string;
   businessOutcome: string;
-  verdict: {
-    verdict: Verdict;
-    lockedAt: string | null;
+  governancePosture: {
+    posture: Posture;
+    lockStatus: string;
   } | null;
   investigation: {
     q1SponsorName: string | null;
@@ -37,7 +37,7 @@ export type DefenseFileWorkflow = {
     status: Status;
     signatureToken: string | null;
     signedAt: string | null;
-    sponsorOverrideVerdict: Verdict | null;
+    sponsorOverridePosture: Posture | null;
     sponsorOverrideName: string | null;
     trackingKey: string | null;
     trackingSystem: string | null;
@@ -77,7 +77,7 @@ export function DefenseFilePanel({ workflow, engagementId }: Props) {
   const df = workflow.defenseFile;
   const status: Status = df?.status ?? "DRAFT";
   const statusCfg = STATUS_CONFIG[status];
-  const verdictLocked = !!workflow.verdict?.lockedAt;
+  const postureLocked = workflow.governancePosture?.lockStatus === "LOCKED";
   const signed = status === "SIGNED" || status === "OVERRIDDEN";
 
   async function sendDefenseFile() {
@@ -138,8 +138,8 @@ export function DefenseFilePanel({ workflow, engagementId }: Props) {
             >
               {statusCfg.label}
             </Badge>
-            {workflow.verdict && (
-              <VerdictBadge verdict={workflow.verdict.verdict} />
+            {workflow.governancePosture && (
+              <PostureBadge posture={workflow.governancePosture.posture} />
             )}
           </div>
           {workflow.investigation?.q1SponsorName && (
@@ -177,8 +177,8 @@ export function DefenseFilePanel({ workflow, engagementId }: Props) {
                 size="sm"
                 variant="outline"
                 onClick={sendDefenseFile}
-                disabled={sending || !verdictLocked}
-                title={!verdictLocked ? "Lock the verdict first" : undefined}
+                disabled={sending || !postureLocked}
+                title={!postureLocked ? "Lock the governance posture first" : undefined}
               >
                 {sending ? (
                   <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
@@ -196,9 +196,9 @@ export function DefenseFilePanel({ workflow, engagementId }: Props) {
             </p>
           )}
 
-          {!verdictLocked && (
+          {!postureLocked && (
             <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-3 py-2">
-              Lock the verdict in the Decision Registry before sending.
+              Lock the governance posture in the Governance Registry before sending.
             </p>
           )}
 
@@ -220,12 +220,12 @@ export function DefenseFilePanel({ workflow, engagementId }: Props) {
               {status === "OVERRIDDEN" && df?.sponsorOverrideName && (
                 <>
                   <p className="text-xs text-muted-foreground">
-                    Override by: {df.sponsorOverrideName}
+                    Departure recorded by: {df.sponsorOverrideName}
                   </p>
-                  {df.sponsorOverrideVerdict && (
+                  {df.sponsorOverridePosture && (
                     <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-                      Override verdict:{" "}
-                      <VerdictBadge verdict={df.sponsorOverrideVerdict} />
+                      Override posture:{" "}
+                      <PostureBadge posture={df.sponsorOverridePosture} />
                     </p>
                   )}
                 </>

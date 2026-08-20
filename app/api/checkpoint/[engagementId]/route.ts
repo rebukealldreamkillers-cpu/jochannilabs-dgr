@@ -6,7 +6,7 @@ import { z } from "zod";
 const schema = z.object({
   responses: z.array(
     z.object({
-      workflowId: z.string().uuid(),
+      agentId: z.string().uuid(),
       actionCarriedOut: z.enum(["yes", "in_progress", "no"]),
       reason: z.string().optional(),
       clientConsentToShare: z.boolean().optional(),
@@ -27,7 +27,7 @@ export async function POST(
 
   const rows = parsed.data.responses.map((r) => ({
     engagementId,
-    workflowId: r.workflowId,
+    agentId: r.agentId,
     actionCarriedOut: r.actionCarriedOut,
     reason: r.reason ?? null,
     clientConsentToShare: r.clientConsentToShare ?? false,

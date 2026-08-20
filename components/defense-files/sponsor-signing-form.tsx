@@ -8,14 +8,14 @@ import { Label } from "@/components/ui/label";
 import { CheckCircle2, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type Verdict = "KEEP" | "DOWNSIZE" | "REPLACE" | "KILL";
+type Posture = "KEEP" | "DOWNSIZE" | "REPLACE" | "KILL";
 
 type Props = {
   token: string;
   sponsorName: string;
 };
 
-const VERDICT_LABELS: Record<Verdict, string> = {
+const POSTURE_LABELS: Record<Posture, string> = {
   KEEP: "Keep — investment justified",
   DOWNSIZE: "Downsize — lower-cost path",
   REPLACE: "Replace — insufficient evidence",
@@ -24,7 +24,7 @@ const VERDICT_LABELS: Record<Verdict, string> = {
 
 export function SponsorSigningForm({ token, sponsorName }: Props) {
   const [decision, setDecision] = useState<"accept" | "override" | null>(null);
-  const [overrideVerdict, setOverrideVerdict] = useState<Verdict | null>(null);
+  const [overridePosture, setOverridePosture] = useState<Posture | null>(null);
   const [overrideRationale, setOverrideRationale] = useState("");
   const [name, setName] = useState(sponsorName);
   const [submitting, setSubmitting] = useState(false);
@@ -35,7 +35,7 @@ export function SponsorSigningForm({ token, sponsorName }: Props) {
   async function submit() {
     if (!decision) { setError("Select a decision."); return; }
     if (decision === "override") {
-      if (!overrideVerdict) { setError("Select the verdict you believe applies."); return; }
+      if (!overridePosture) { setError("Select the governance posture you believe applies."); return; }
       if (!overrideRationale.trim()) { setError("Rationale is required when recording a departure."); return; }
       if (!name.trim()) { setError("Your name is required."); return; }
     }
@@ -48,7 +48,7 @@ export function SponsorSigningForm({ token, sponsorName }: Props) {
         ? { action: "accept" }
         : {
             action: "override",
-            verdict: overrideVerdict!,
+            verdict: overridePosture!,
             rationale: overrideRationale,
             sponsorName: name,
           };
@@ -75,12 +75,12 @@ export function SponsorSigningForm({ token, sponsorName }: Props) {
       <div className="border rounded-lg p-8 text-center space-y-3">
         <CheckCircle2 className="w-10 h-10 text-emerald-600 mx-auto" />
         <h2 className="text-base font-semibold">
-          {overridden ? "Departure recorded" : "Verdict accepted"}
+          {overridden ? "Departure recorded" : "Governance posture authorized"}
         </h2>
         <p className="text-sm text-muted-foreground">
           {overridden
             ? "Your stated rationale has been recorded as a permanent audit entry."
-            : "Your acceptance is recorded. The Decision Defense File is now closed."}
+            : "Your authorization is recorded. The Defense File is now closed."}
         </p>
       </div>
     );
@@ -103,9 +103,9 @@ export function SponsorSigningForm({ token, sponsorName }: Props) {
               : "border-border hover:border-foreground/30",
           )}
         >
-          <p className="text-sm font-medium">Accept verdict</p>
+          <p className="text-sm font-medium">Accept governance posture</p>
           <p className="text-xs text-muted-foreground mt-0.5">
-            I accept the finding as issued
+            I authorize the posture as issued
           </p>
         </button>
         <button
@@ -119,7 +119,7 @@ export function SponsorSigningForm({ token, sponsorName }: Props) {
         >
           <p className="text-sm font-medium">Record a departure</p>
           <p className="text-xs text-muted-foreground mt-0.5">
-            I believe a different verdict applies
+            I believe a different posture applies
           </p>
         </button>
       </div>
@@ -138,20 +138,20 @@ export function SponsorSigningForm({ token, sponsorName }: Props) {
           </div>
 
           <div className="space-y-2">
-            <Label className="text-sm font-medium">Verdict you believe applies</Label>
+            <Label className="text-sm font-medium">Governance posture you believe applies</Label>
             <div className="grid grid-cols-2 gap-2">
-              {(["KEEP", "DOWNSIZE", "REPLACE", "KILL"] as Verdict[]).map((v) => (
+              {(["KEEP", "DOWNSIZE", "REPLACE", "KILL"] as Posture[]).map((p) => (
                 <button
-                  key={v}
-                  onClick={() => setOverrideVerdict(v)}
+                  key={p}
+                  onClick={() => setOverridePosture(p)}
                   className={cn(
                     "border rounded-lg px-3 py-2 text-left text-xs transition-colors",
-                    overrideVerdict === v
+                    overridePosture === p
                       ? "border-foreground bg-foreground/5 font-medium"
                       : "border-border hover:border-foreground/30",
                   )}
                 >
-                  {VERDICT_LABELS[v]}
+                  {POSTURE_LABELS[p]}
                 </button>
               ))}
             </div>
@@ -163,11 +163,11 @@ export function SponsorSigningForm({ token, sponsorName }: Props) {
               id="rationale"
               value={overrideRationale}
               onChange={(e) => setOverrideRationale(e.target.value)}
-              placeholder="Explain why the issued verdict does not reflect the evidence as you understand it."
+              placeholder="Explain why the issued governance posture does not reflect the evidence as you understand it."
               className="min-h-[80px] resize-none"
             />
             <p className="text-xs text-muted-foreground">
-              This will be recorded verbatim as a permanent audit entry alongside the issued verdict.
+              This will be recorded verbatim as a permanent audit entry alongside the issued posture.
             </p>
           </div>
         </div>
@@ -189,7 +189,7 @@ export function SponsorSigningForm({ token, sponsorName }: Props) {
         ) : (
           <CheckCircle2 className="w-4 h-4 mr-1.5" />
         )}
-        {decision === "override" ? "Record departure" : "Accept verdict"}
+        {decision === "override" ? "Record departure" : "Authorize governance posture"}
       </Button>
     </div>
   );

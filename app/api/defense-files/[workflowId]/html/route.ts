@@ -48,14 +48,14 @@ export async function GET(
 
   const df = data.defenseFile;
   const inv = data.investigation;
-  const vrd = data.verdict;
+  const vrd = data.governancePosture;
   const eng = data.engagement;
   const costPerCall = data.costPerCallUsd ? parseFloat(data.costPerCallUsd) : null;
   const monthly = costPerCall && data.monthlyCallVolume ? costPerCall * data.monthlyCallVolume : null;
   const risks = (inv?.q5Risks ?? []) as RiskEntry[];
 
-  const verdictColor = vrd ? (VERDICT_COLORS[vrd.verdict] ?? "#111") : "#111";
-  const verdictBg = vrd ? (VERDICT_BG[vrd.verdict] ?? "#f3f4f6") : "#f3f4f6";
+  const verdictColor = vrd ? (VERDICT_COLORS[vrd.posture] ?? "#111") : "#111";
+  const verdictBg = vrd ? (VERDICT_BG[vrd.posture] ?? "#f3f4f6") : "#f3f4f6";
 
   const risksTable = risks.length
     ? `<table style="width:100%;border-collapse:collapse;font-size:13px;margin-top:8px;">
@@ -70,7 +70,7 @@ export async function GET(
             <td style="padding:8px 10px;border:1px solid #e5e7eb;">${r.description}</td>
             <td style="padding:8px 10px;border:1px solid #e5e7eb;">${r.category}</td>
             <td style="padding:8px 10px;border:1px solid #e5e7eb;">${r.severity}</td>
-            <td style="padding:8px 10px;border:1px solid #e5e7eb;">${r.accountableOwnerName}<br/><span style="color:#6b7280;font-size:11px;">${r.accountableOwnerTitle}</span></td>
+            <td style="padding:8px 10px;border:1px solid #e5e7eb;">${r.requiredReviewerName}<br/><span style="color:#6b7280;font-size:11px;">${r.requiredReviewerTitle}</span></td>
           </tr>`).join("")}
         </tbody>
       </table>`
@@ -83,7 +83,7 @@ export async function GET(
           ${row("Status", df.status === "OVERRIDDEN" ? "Departure recorded" : "Accepted")}
           ${df.status === "OVERRIDDEN" ? `
             ${row("Sponsor name", df.sponsorOverrideName)}
-            ${row("Override verdict", df.sponsorOverrideVerdict ?? "—")}
+            ${row("Override verdict", df.sponsorOverridePosture ?? "—")}
             ${row("Override rationale", df.sponsorOverrideRationale)}
             ${row("Recorded at", fmtDate(df.sponsorOverrideAt))}
           ` : `
@@ -139,7 +139,7 @@ export async function GET(
   <div style="margin-bottom:32px;padding:20px;border-radius:8px;background:${verdictBg};border:1px solid ${verdictColor}40;">
     <p style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:${verdictColor};margin:0 0 8px;font-weight:600;">Assigned Verdict</p>
     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-      <span class="verdict-pill">${vrd.verdict}</span>
+      <span class="verdict-pill">${vrd.posture}</span>
       ${vrd.estimatedAnnualSavingsUsd ? `<span style="font-size:13px;color:${verdictColor};">Est. savings: ${fmt(parseFloat(vrd.estimatedAnnualSavingsUsd))}/yr</span>` : ""}
     </div>
     <p style="margin:12px 0 0;font-size:13px;">${vrd.reason}</p>
@@ -195,7 +195,7 @@ export async function GET(
   <h2>Q6 — Verdict Recommendation</h2>
   <div class="section">
     <table style="font-size:13px;">
-      ${row("Recommended verdict", inv?.q6RecommendedVerdict)}
+      ${row("Recommended verdict", inv?.q6RecommendedPosture)}
       ${row("Analyst decision", inv?.q6AnalystAccepted ? "Accepted" : inv?.q6AnalystAccepted === false ? "Departure recorded" : "Pending")}
     </table>
     ${inv?.q6ReasoningChain ? `<div style="margin-top:12px;padding-top:12px;border-top:1px solid #e5e7eb;font-size:13px;">${inv.q6ReasoningChain}</div>` : ""}

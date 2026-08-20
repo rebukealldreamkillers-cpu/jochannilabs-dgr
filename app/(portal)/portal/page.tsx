@@ -1,10 +1,10 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { db } from "@/db";
-import { engagements, workflows } from "@/db/schema";
-import { eq, isNull } from "drizzle-orm";
+import { engagements, registeredAgents } from "@/db/schema";
+import { isNull } from "drizzle-orm";
 import { StageBadge } from "@/components/engagements/stage-badge";
-import { VerdictBadge } from "@/components/engagements/verdict-badge";
+import { PostureBadge } from "@/components/engagements/verdict-badge";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 
@@ -20,10 +20,10 @@ export default async function PortalHomePage() {
   // Find engagements matching this sponsor's contact email
   const rows = await db.query.engagements.findMany({
     with: {
-      workflows: {
-        where: isNull(workflows.deletedAt),
+      registeredAgents: {
+        where: isNull(registeredAgents.deletedAt),
         with: {
-          verdict: true,
+          governancePosture: true,
           investigation: true,
         },
       },
@@ -34,7 +34,7 @@ export default async function PortalHomePage() {
     (e) =>
       userEmail &&
       (e.contactEmail.toLowerCase() === userEmail ||
-        e.workflows.some(
+        e.registeredAgents.some(
           (w) => w.investigation?.q1SponsorEmail?.toLowerCase() === userEmail,
         )),
   );
@@ -56,7 +56,7 @@ export default async function PortalHomePage() {
       <div>
         <h1 className="text-xl font-semibold">Your engagement{matched.length > 1 ? "s" : ""}</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Decision Governance Review findings and defense files
+          Decision Governance Review · AI agent governance assessments
         </p>
       </div>
 
@@ -68,12 +68,12 @@ export default async function PortalHomePage() {
             | "REGISTRY"
             | "DEFENSE_FILES"
             | "CLOSED";
-          const total = engagement.workflows.length;
-          const verdictCounts: Record<string, number> = {};
-          for (const w of engagement.workflows) {
-            if (w.verdict) {
-              verdictCounts[w.verdict.verdict] =
-                (verdictCounts[w.verdict.verdict] ?? 0) + 1;
+          const total = engagement.registeredAgents.length;
+          const postureCounts: Record<string, number> = {};
+          for (const w of engagement.registeredAgents) {
+            if (w.governancePosture) {
+              postureCounts[w.governancePosture.posture] =
+                (postureCounts[w.governancePosture.posture] ?? 0) + 1;
             }
           }
 
@@ -89,12 +89,12 @@ export default async function PortalHomePage() {
                   <StageBadge stage={stage} />
                 </div>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  {total} workflow{total !== 1 ? "s" : ""}
-                  {Object.keys(verdictCounts).length > 0 && (
+                  {total} agent{total !== 1 ? "s" : ""}
+                  {Object.keys(postureCounts).length > 0 && (
                     <span className="ml-2">
                       ·{" "}
-                      {Object.entries(verdictCounts)
-                        .map(([v, n]) => `${n} ${v}`)
+                      {Object.entries(postureCounts)
+                        .map(([p, n]) => `${n} ${p}`)
                         .join(", ")}
                     </span>
                   )}

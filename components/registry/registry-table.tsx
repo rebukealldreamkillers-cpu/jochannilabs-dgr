@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { VerdictBadge } from "@/components/engagements/verdict-badge";
+import { PostureBadge } from "@/components/engagements/verdict-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type Verdict = "KEEP" | "DOWNSIZE" | "REPLACE" | "KILL";
+type Posture = "KEEP" | "DOWNSIZE" | "REPLACE" | "KILL";
 
 export type RegistryWorkflow = {
   id: string;
@@ -28,18 +28,21 @@ export type RegistryWorkflow = {
   costPerCallUsd: string | null;
   monthlyCallVolume: number | null;
   investigation: {
-    q6RecommendedVerdict: Verdict | null;
+    q6RecommendedPosture: Posture | null;
     q6ReasoningChain: string | null;
+    q6DalxEnforcementPosture: string | null;
     completedAt: string | null;
     q3AnnualizedUsd: string | null;
   } | null;
-  verdict: {
+  governancePosture: {
     id: string;
-    verdict: Verdict;
+    posture: Posture;
+    dalxEnforcementPosture: string;
     reason: string;
     evidenceSummary: string | null;
     conditionForChange: string;
     estimatedAnnualSavingsUsd: string | null;
+    lockStatus: string;
     lockedAt: string | null;
   } | null;
 };
@@ -48,65 +51,68 @@ type Props = {
   workflows: RegistryWorkflow[];
 };
 
-const VERDICT_STYLES: Record<Verdict, { border: string; bg: string; text: string }> = {
+const POSTURE_STYLES: Record<Posture, { border: string; bg: string; text: string }> = {
   KEEP: { border: "border-emerald-400", bg: "bg-emerald-50", text: "text-emerald-800" },
   DOWNSIZE: { border: "border-amber-400", bg: "bg-amber-50", text: "text-amber-800" },
   REPLACE: { border: "border-orange-400", bg: "bg-orange-50", text: "text-orange-800" },
   KILL: { border: "border-red-400", bg: "bg-red-50", text: "text-red-800" },
 };
 
-const VERDICT_LABELS: Record<Verdict, string> = {
+const POSTURE_LABELS: Record<Posture, string> = {
   KEEP: "Keep — investment justified",
   DOWNSIZE: "Downsize — lower-cost path exists",
   REPLACE: "Replace — mechanism lacks evidence",
   KILL: "Kill — no evidence, no alternative",
 };
 
-// ── Verdict assignment form ────────────────────────────────────────────────────
+// ── Posture assignment form ────────────────────────────────────────────────────
 
 type FormProps = {
-  workflowId: string;
-  initialVerdict: Verdict | null;
+  agentId: string;
+  initialPosture: Posture | null;
   initialReason: string;
   initialEvidenceSummary: string;
   initialConditionForChange: string;
   initialSavings: string;
+  dalxEnforcementPosture: string | null;
   locked: boolean;
   onSaved: () => void;
 };
 
-function VerdictAssignmentForm({
-  workflowId,
-  initialVerdict,
+function PostureAssignmentForm({
+  agentId,
+  initialPosture,
   initialReason,
   initialEvidenceSummary,
   initialConditionForChange,
   initialSavings,
+  dalxEnforcementPosture: initialDalxPosture,
   locked,
   onSaved,
 }: FormProps) {
-  const [verdict, setVerdict] = useState<Verdict | null>(initialVerdict);
+  const [posture, setPosture] = useState<Posture | null>(initialPosture);
   const [reason, setReason] = useState(initialReason);
   const [evidenceSummary, setEvidenceSummary] = useState(initialEvidenceSummary);
   const [conditionForChange, setConditionForChange] = useState(initialConditionForChange);
   const [savings, setSavings] = useState(initialSavings);
+  const [dalxPosture, setDalxPosture] = useState<string | null>(initialDalxPosture);
   const [saving, setSaving] = useState(false);
   const [locking, setLocking] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function submit(lock: boolean) {
-    if (!verdict) { setError("Select a verdict."); return; }
+    if (!posture) { setError("Select a governance posture."); return; }
     if (!reason.trim()) { setError("Reason is required."); return; }
     if (!conditionForChange.trim()) { setError("Condition for change is required."); return; }
 
     lock ? setLocking(true) : setSaving(true);
     setError(null);
 
-    const res = await fetch(`/api/verdicts/${workflowId}`, {
+    const res = await fetch(`/api/postures/${agentId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        verdict,
+        posture,
         reason,
         evidenceSummary: evidenceSummary || null,
         conditionForChange,
@@ -118,6 +124,10 @@ function VerdictAssignmentForm({
     lock ? setLocking(false) : setSaving(false);
 
     if (res.ok) {
+      const updated = await res.json();
+      if (updated?.dalxEnforcementPosture) {
+        setDalxPosture(updated.dalxEnforcementPosture);
+      }
       onSaved();
     } else {
       const body = await res.json();
@@ -127,18 +137,18 @@ function VerdictAssignmentForm({
 
   return (
     <div className="space-y-5 pt-1">
-      {/* Verdict selector */}
+      {/* Posture selector */}
       <div className="space-y-2">
-        <Label className="text-sm font-medium">Verdict</Label>
+        <Label className="text-sm font-medium">Governance posture</Label>
         <div className="grid grid-cols-2 gap-2.5">
-          {(["KEEP", "DOWNSIZE", "REPLACE", "KILL"] as Verdict[]).map((v) => {
-            const s = VERDICT_STYLES[v];
-            const active = verdict === v;
+          {(["KEEP", "DOWNSIZE", "REPLACE", "KILL"] as Posture[]).map((p) => {
+            const s = POSTURE_STYLES[p];
+            const active = posture === p;
             return (
               <button
-                key={v}
+                key={p}
                 disabled={locked}
-                onClick={() => setVerdict(v)}
+                onClick={() => setPosture(p)}
                 className={cn(
                   "border rounded-lg px-3 py-2.5 text-left transition-colors",
                   active
@@ -147,9 +157,9 @@ function VerdictAssignmentForm({
                   locked && "opacity-60 cursor-not-allowed",
                 )}
               >
-                <p className="text-xs font-semibold">{v}</p>
+                <p className="text-xs font-semibold">{p}</p>
                 <p className="text-[10px] text-muted-foreground mt-0.5 leading-snug">
-                  {VERDICT_LABELS[v].split("—")[1]?.trim()}
+                  {POSTURE_LABELS[p].split("—")[1]?.trim()}
                 </p>
               </button>
             );
@@ -157,59 +167,69 @@ function VerdictAssignmentForm({
         </div>
       </div>
 
+      {/* DAL-X enforcement action preview */}
+      {(dalxPosture || posture) && (
+        <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2.5 space-y-1">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">DAL-X enforcement action</p>
+          <p className="text-xs text-slate-700 leading-relaxed">
+            {dalxPosture ?? "Will be computed when posture is saved."}
+          </p>
+        </div>
+      )}
+
       {/* Reason */}
       <div className="space-y-1.5">
-        <Label htmlFor={`reason-${workflowId}`}>
+        <Label htmlFor={`reason-${agentId}`}>
           Reason <span className="text-muted-foreground font-normal">(required)</span>
         </Label>
         <Textarea
-          id={`reason-${workflowId}`}
+          id={`reason-${agentId}`}
           value={reason}
           onChange={(e) => setReason(e.target.value)}
           disabled={locked}
-          placeholder="Explain why this verdict is warranted based on the six questions."
+          placeholder="Explain why this governance posture is warranted based on the six questions."
           className="min-h-[80px] resize-none"
         />
       </div>
 
       {/* Evidence summary */}
       <div className="space-y-1.5">
-        <Label htmlFor={`evidence-${workflowId}`}>
+        <Label htmlFor={`evidence-${agentId}`}>
           Evidence summary <span className="text-muted-foreground font-normal">(optional)</span>
         </Label>
         <Textarea
-          id={`evidence-${workflowId}`}
+          id={`evidence-${agentId}`}
           value={evidenceSummary}
           onChange={(e) => setEvidenceSummary(e.target.value)}
           disabled={locked}
-          placeholder="Summarise the evidence cited in Q2 that supports this verdict."
+          placeholder="Summarise the evidence cited in Q2 that supports this posture."
           className="min-h-[60px] resize-none"
         />
       </div>
 
       {/* Condition for change */}
       <div className="space-y-1.5">
-        <Label htmlFor={`condition-${workflowId}`}>
+        <Label htmlFor={`condition-${agentId}`}>
           Condition for change <span className="text-muted-foreground font-normal">(required)</span>
         </Label>
         <Textarea
-          id={`condition-${workflowId}`}
+          id={`condition-${agentId}`}
           value={conditionForChange}
           onChange={(e) => setConditionForChange(e.target.value)}
           disabled={locked}
-          placeholder="What would need to be true for this verdict to be revisited?"
+          placeholder="What would need to be true for this posture to be revisited?"
           className="min-h-[60px] resize-none"
         />
       </div>
 
       {/* Estimated annual savings */}
       <div className="space-y-1.5">
-        <Label htmlFor={`savings-${workflowId}`}>
+        <Label htmlFor={`savings-${agentId}`}>
           Estimated annual savings (USD){" "}
           <span className="text-muted-foreground font-normal">(optional — for DOWNSIZE / REPLACE / KILL)</span>
         </Label>
         <Input
-          id={`savings-${workflowId}`}
+          id={`savings-${agentId}`}
           type="number"
           min={0}
           step={100}
@@ -239,7 +259,7 @@ function VerdictAssignmentForm({
             ) : (
               <Lock className="w-4 h-4 mr-1.5" />
             )}
-            Lock verdict
+            Lock posture
           </Button>
         </div>
       )}
@@ -247,7 +267,7 @@ function VerdictAssignmentForm({
       {locked && (
         <div className="flex items-center gap-2 text-sm text-emerald-700">
           <Lock className="w-4 h-4" />
-          <span>Verdict locked — included in export and Defense File</span>
+          <span>Governance posture locked — included in Governance Manifest and Defense File</span>
         </div>
       )}
     </div>
@@ -259,23 +279,22 @@ function VerdictAssignmentForm({
 export function RegistryTable({ workflows }: Props) {
   const router = useRouter();
   const [expandedId, setExpandedId] = useState<string | null>(
-    // Auto-expand first workflow without a locked verdict
-    workflows.find((w) => !w.verdict?.lockedAt)?.id ?? null,
+    workflows.find((w) => !w.governancePosture?.lockedAt)?.id ?? null,
   );
 
   return (
     <div className="border rounded-lg overflow-hidden divide-y">
       {workflows.map((w, idx) => {
-        const done = !!w.verdict?.lockedAt;
-        const hasDraft = !!w.verdict && !w.verdict.lockedAt;
+        const locked = w.governancePosture?.lockStatus === "LOCKED";
+        const hasDraft = !!w.governancePosture && !locked;
         const expanded = expandedId === w.id;
         const monthly =
           w.costPerCallUsd && w.monthlyCallVolume
             ? parseFloat(w.costPerCallUsd) * w.monthlyCallVolume
             : null;
 
-        const formKey = w.verdict
-          ? `${w.verdict.id}-${w.verdict.lockedAt ?? "draft"}`
+        const formKey = w.governancePosture
+          ? `${w.governancePosture.id}-${w.governancePosture.lockStatus}`
           : "new";
 
         return (
@@ -286,7 +305,7 @@ export function RegistryTable({ workflows }: Props) {
               onClick={() => setExpandedId(expanded ? null : w.id)}
             >
               <div className="mt-0.5 flex-shrink-0">
-                {done ? (
+                {locked ? (
                   <CheckCircle2 className="w-5 h-5 text-emerald-600" />
                 ) : hasDraft ? (
                   <Circle className="w-5 h-5 text-amber-500" />
@@ -301,7 +320,7 @@ export function RegistryTable({ workflows }: Props) {
                     {String(idx + 1).padStart(2, "0")}
                   </span>
                   <span className="text-sm font-medium">{w.name}</span>
-                  {done && (
+                  {locked && (
                     <Badge
                       variant="outline"
                       className="text-[10px] h-4 px-1.5 text-emerald-700 border-emerald-200 bg-emerald-50"
@@ -330,16 +349,16 @@ export function RegistryTable({ workflows }: Props) {
                       /mo
                     </span>
                   )}
-                  {w.investigation?.q6RecommendedVerdict && (
+                  {w.investigation?.q6RecommendedPosture && (
                     <span className="text-xs text-muted-foreground flex items-center gap-1">
                       Recommended:{" "}
-                      <VerdictBadge verdict={w.investigation.q6RecommendedVerdict} />
+                      <PostureBadge posture={w.investigation.q6RecommendedPosture} />
                     </span>
                   )}
-                  {w.verdict && (
+                  {w.governancePosture && (
                     <span className="text-xs text-muted-foreground flex items-center gap-1">
                       Assigned:{" "}
-                      <VerdictBadge verdict={w.verdict.verdict} />
+                      <PostureBadge posture={w.governancePosture.posture} />
                     </span>
                   )}
                 </div>
@@ -365,19 +384,24 @@ export function RegistryTable({ workflows }: Props) {
                   </div>
                 )}
 
-                <VerdictAssignmentForm
+                <PostureAssignmentForm
                   key={formKey}
-                  workflowId={w.id}
-                  initialVerdict={
-                    w.verdict?.verdict ?? w.investigation?.q6RecommendedVerdict ?? null
+                  agentId={w.id}
+                  initialPosture={
+                    w.governancePosture?.posture ?? w.investigation?.q6RecommendedPosture ?? null
                   }
                   initialReason={
-                    w.verdict?.reason ?? w.investigation?.q6ReasoningChain ?? ""
+                    w.governancePosture?.reason ?? w.investigation?.q6ReasoningChain ?? ""
                   }
-                  initialEvidenceSummary={w.verdict?.evidenceSummary ?? ""}
-                  initialConditionForChange={w.verdict?.conditionForChange ?? ""}
-                  initialSavings={w.verdict?.estimatedAnnualSavingsUsd ?? ""}
-                  locked={!!w.verdict?.lockedAt}
+                  initialEvidenceSummary={w.governancePosture?.evidenceSummary ?? ""}
+                  initialConditionForChange={w.governancePosture?.conditionForChange ?? ""}
+                  initialSavings={w.governancePosture?.estimatedAnnualSavingsUsd ?? ""}
+                  dalxEnforcementPosture={
+                    w.governancePosture?.dalxEnforcementPosture ??
+                    w.investigation?.q6DalxEnforcementPosture ??
+                    null
+                  }
+                  locked={locked}
                   onSaved={() => router.refresh()}
                 />
               </div>

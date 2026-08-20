@@ -7,7 +7,7 @@ import { SendCheckpointButton } from "@/components/engagements/send-checkpoint-b
 import { WorkflowList } from "@/components/workflows/workflow-list";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { AlertCircle, ChevronRight } from "lucide-react";
+import { AlertCircle, ChevronRight, FileCheck2 } from "lucide-react";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -32,20 +32,22 @@ export default async function EngagementDetailPage({
   const stage = engagement.stage as Stage;
   const actions = pendingActions(engagement);
   const next = nextStage(stage);
-  const workflows = (engagement.workflows ?? []).map((w) => ({
+  const workflows = (engagement.registeredAgents ?? []).map((w) => ({
     id: w.id,
     name: w.name,
+    permittedPurpose: w.permittedPurpose ?? null,
     businessOutcome: w.businessOutcome,
     costPerCallUsd: w.costPerCallUsd ?? null,
     monthlyCallVolume: w.monthlyCallVolume ?? null,
     modelTier: w.modelTier ?? null,
     existingEvidenceStatus: (w.existingEvidenceStatus ?? null) as "NONE" | "ANECDOTAL" | "DOCUMENTED" | null,
+    registrationStatus: (w.registrationStatus ?? "ACTIVE") as "ACTIVE" | "SUSPENDED" | "DECOMMISSIONING" | "CLOSED",
     sortOrder: w.sortOrder,
     investigation: w.investigation
       ? { completedAt: w.investigation.completedAt?.toISOString() ?? null }
       : null,
-    verdict: w.verdict
-      ? { verdict: w.verdict.verdict as "KEEP" | "DOWNSIZE" | "REPLACE" | "KILL" }
+    governancePosture: w.governancePosture
+      ? { posture: w.governancePosture.posture as "KEEP" | "DOWNSIZE" | "REPLACE" | "KILL" }
       : null,
     defenseFile: w.defenseFile ? { status: w.defenseFile.status } : null,
   }));
@@ -121,14 +123,82 @@ export default async function EngagementDetailPage({
           className="flex items-center justify-between border rounded-lg px-5 py-4 hover:bg-muted/30 transition-colors group"
         >
           <div>
-            <p className="text-sm font-medium">Decision Registry</p>
+            <p className="text-sm font-medium">Governance Registry</p>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Assign and lock a verdict for each workflow
+              Assign and lock a governance posture for each agent
             </p>
           </div>
           <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
         </Link>
       )}
+
+      {/* Governance Manifest link — visible from REGISTRY stage onward */}
+      {(stage === "REGISTRY" || stage === "DEFENSE_FILES" || stage === "CLOSED") && (
+        <Link
+          href={`/admin/engagements/${id}/manifest`}
+          className="flex items-center justify-between border rounded-lg px-5 py-4 hover:bg-muted/30 transition-colors group"
+        >
+          <div>
+            <p className="text-sm font-medium">Governance Manifest</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Preview and generate the DAL-X policy configuration
+            </p>
+          </div>
+          <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+        </Link>
+      )}
+
+      {/* Governance Manifest panel — visible from REGISTRY stage onward */}
+      {(stage === "REGISTRY" || stage === "DEFENSE_FILES" || stage === "CLOSED") && (() => {
+        const latestManifest = (engagement.governanceManifests ?? [])[0];
+        const manifestStatusCfg: Record<string, { label: string; class: string }> = {
+          PROPOSED: { label: "Proposed", class: "bg-blue-50 text-blue-700 border-blue-200" },
+          SIGNED: { label: "Signed", class: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+          SUPERSEDED: { label: "Superseded", class: "bg-muted text-muted-foreground border-border" },
+        };
+        const cfg = latestManifest ? manifestStatusCfg[latestManifest.manifestStatus] : null;
+        return (
+          <div className="border rounded-lg px-5 py-4 space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <FileCheck2 className="w-4 h-4 text-muted-foreground" />
+                <p className="text-sm font-medium">Governance Manifest</p>
+                {cfg && (
+                  <Badge variant="outline" className={`text-[10px] h-4 px-1.5 ${cfg.class}`}>
+                    {cfg.label}
+                  </Badge>
+                )}
+              </div>
+              <a
+                href={`/api/engagements/${id}/registry/export?format=manifest`}
+                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Download
+              </a>
+            </div>
+            {latestManifest ? (
+              <p className="text-xs text-muted-foreground">
+                v{latestManifest.version} · Generated{" "}
+                {new Date(latestManifest.generatedAt).toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                })}
+                {latestManifest.signedAt && (
+                  <> · Signed {new Date(latestManifest.signedAt).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                  })}{latestManifest.signedByName && ` by ${latestManifest.signedByName}`}</>
+                )}
+              </p>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                No manifest generated yet. Download to generate one.
+              </p>
+            )}
+          </div>
+        );
+      })()}
 
       {/* Defense Files link — visible from DEFENSE_FILES stage onward */}
       {(stage === "DEFENSE_FILES" || stage === "CLOSED") && (

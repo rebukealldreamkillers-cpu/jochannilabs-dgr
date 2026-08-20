@@ -22,6 +22,7 @@ export const EVIDENCE_STATUS_OPTIONS = [
 export const workflowSchema = z.object({
   engagementId: z.string().uuid(),
   name: z.string().min(2, "Workflow name is required"),
+  permittedPurpose: z.string().min(2, "Permitted purpose is required"),
   businessOutcome: z.string().min(10, "Describe the business outcome (min 10 characters)"),
   costPerCallUsd: z
     .string()

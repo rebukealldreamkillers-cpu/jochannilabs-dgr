@@ -3,29 +3,29 @@ import { investigations } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import type { Investigation } from "@/db/schema";
 
-export async function getOrCreateInvestigation(workflowId: string): Promise<Investigation> {
+export async function getOrCreateInvestigation(agentId: string): Promise<Investigation> {
   const existing = await db.query.investigations.findFirst({
-    where: eq(investigations.workflowId, workflowId),
+    where: eq(investigations.agentId, agentId),
   });
   if (existing) return existing;
 
   const [created] = await db
     .insert(investigations)
-    .values({ workflowId })
+    .values({ agentId })
     .returning();
   return created;
 }
 
-export async function getInvestigation(workflowId: string) {
+export async function getInvestigation(agentId: string) {
   return db.query.investigations.findFirst({
-    where: eq(investigations.workflowId, workflowId),
+    where: eq(investigations.agentId, agentId),
   });
 }
 
-type InvestigationPatch = Partial<Omit<Investigation, "id" | "workflowId" | "createdAt" | "updatedAt">>;
+type InvestigationPatch = Partial<Omit<Investigation, "id" | "agentId" | "createdAt" | "updatedAt">>;
 
-export async function patchInvestigation(workflowId: string, data: InvestigationPatch) {
-  const existing = await getOrCreateInvestigation(workflowId);
+export async function patchInvestigation(agentId: string, data: InvestigationPatch) {
+  const existing = await getOrCreateInvestigation(agentId);
 
   const [updated] = await db
     .update(investigations)
@@ -33,7 +33,6 @@ export async function patchInvestigation(workflowId: string, data: Investigation
     .where(eq(investigations.id, existing.id))
     .returning();
 
-  // Mark overall investigation complete if all six questions done
   const allDone =
     updated.q1CompletedAt &&
     updated.q2CompletedAt &&

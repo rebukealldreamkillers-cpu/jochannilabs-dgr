@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2, Trash2, Plus } from "lucide-react";
+import { Loader2, Trash2, Plus, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -20,7 +21,7 @@ type RiskCategory = RiskEntry["category"];
 type RiskSeverity = RiskEntry["severity"];
 
 type QProps = {
-  workflowId: string;
+  agentId: string;
   investigation: Investigation;
   onComplete: () => void;
 };
@@ -72,11 +73,78 @@ const EMPTY_DRAFT: Omit<RiskEntry, "id"> = {
   description: "",
   category: "OPERATIONAL",
   severity: "LOW",
-  accountableOwnerName: "",
-  accountableOwnerTitle: "",
+  outputConditions: "",
+  escalationTrigger: "",
+  requiredReviewerName: "",
+  requiredReviewerTitle: "",
+  prohibitedExecutionConditions: null,
 };
 
-export function Q5Risks({ workflowId, investigation, onComplete }: QProps) {
+type RiskCardProps = {
+  risk: RiskEntry;
+  onRemove: (id: string) => void;
+};
+
+function RiskCard({ risk, onRemove }: RiskCardProps) {
+  const [expanded, setExpanded] = useState(false);
+  return (
+    <div className="rounded-md border border-border bg-background p-3.5 space-y-2">
+      <div className="flex items-start justify-between gap-3">
+        <p className="text-sm text-foreground leading-snug flex-1">{risk.description}</p>
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={() => setExpanded((v) => !v)}
+            className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+            aria-label={expanded ? "Collapse" : "Expand details"}
+          >
+            {expanded ? <ChevronUp className="size-3.5" /> : <ChevronDown className="size-3.5" />}
+          </button>
+          <button
+            type="button"
+            onClick={() => onRemove(risk.id)}
+            className="rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+            aria-label="Remove risk"
+          >
+            <Trash2 className="size-3.5" />
+          </button>
+        </div>
+      </div>
+      <div className="flex flex-wrap items-center gap-1.5">
+        <CategoryBadge category={risk.category} />
+        <SeverityBadge severity={risk.severity} />
+        <span className="text-xs text-muted-foreground">
+          {risk.requiredReviewerName}
+          {risk.requiredReviewerTitle ? `, ${risk.requiredReviewerTitle}` : ""}
+        </span>
+      </div>
+      {expanded && (
+        <div className="pt-2 space-y-2 text-xs">
+          {risk.outputConditions && (
+            <div>
+              <p className="font-medium text-muted-foreground uppercase tracking-wide text-[10px]">Output conditions</p>
+              <p className="mt-0.5">{risk.outputConditions}</p>
+            </div>
+          )}
+          {risk.escalationTrigger && (
+            <div>
+              <p className="font-medium text-muted-foreground uppercase tracking-wide text-[10px]">Escalation trigger</p>
+              <p className="mt-0.5">{risk.escalationTrigger}</p>
+            </div>
+          )}
+          {risk.prohibitedExecutionConditions && (
+            <div className="rounded border border-red-200 bg-red-50 px-2 py-1.5">
+              <p className="font-medium text-red-800 uppercase tracking-wide text-[10px]">Prohibited execution conditions</p>
+              <p className="mt-0.5 text-red-700">{risk.prohibitedExecutionConditions}</p>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function Q5Risks({ agentId, investigation, onComplete }: QProps) {
   const [risks, setRisks] = useState<RiskEntry[]>(
     (investigation.q5Risks as RiskEntry[] | null) ?? []
   );
@@ -88,8 +156,9 @@ export function Q5Risks({ workflowId, investigation, onComplete }: QProps) {
   function validateDraft(): boolean {
     const errs: Partial<Record<keyof Omit<RiskEntry, "id">, string>> = {};
     if (!draft.description.trim()) errs.description = "Description is required.";
-    if (!draft.accountableOwnerName.trim()) errs.accountableOwnerName = "Owner name is required.";
-    if (!draft.accountableOwnerTitle.trim()) errs.accountableOwnerTitle = "Owner title is required.";
+    if (!draft.escalationTrigger.trim()) errs.escalationTrigger = "Escalation trigger is required — DAL-X uses this to fire alerts.";
+    if (!draft.requiredReviewerName.trim()) errs.requiredReviewerName = "Reviewer name is required.";
+    if (!draft.requiredReviewerTitle.trim()) errs.requiredReviewerTitle = "Reviewer title is required.";
     setDraftErrors(errs);
     return Object.keys(errs).length === 0;
   }
@@ -101,8 +170,11 @@ export function Q5Risks({ workflowId, investigation, onComplete }: QProps) {
       description: draft.description.trim(),
       category: draft.category,
       severity: draft.severity,
-      accountableOwnerName: draft.accountableOwnerName.trim(),
-      accountableOwnerTitle: draft.accountableOwnerTitle.trim(),
+      outputConditions: draft.outputConditions.trim(),
+      escalationTrigger: draft.escalationTrigger.trim(),
+      requiredReviewerName: draft.requiredReviewerName.trim(),
+      requiredReviewerTitle: draft.requiredReviewerTitle.trim(),
+      prohibitedExecutionConditions: draft.prohibitedExecutionConditions?.trim() || null,
     };
     setRisks((prev) => [...prev, newEntry]);
     setDraft(EMPTY_DRAFT);
@@ -117,7 +189,7 @@ export function Q5Risks({ workflowId, investigation, onComplete }: QProps) {
     setSaving(true);
     setError(null);
     try {
-      const res = await fetch(`/api/investigations/${workflowId}`, {
+      const res = await fetch(`/api/investigations/${agentId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -141,9 +213,9 @@ export function Q5Risks({ workflowId, investigation, onComplete }: QProps) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-base font-semibold text-foreground">Q5 — Risk Register</h2>
+        <h2 className="text-base font-semibold text-foreground">Q5 — Risk Conditions &amp; DAL-X Escalation Triggers</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Document risks associated with continuing, modifying, or eliminating this workflow.
+          Document risk conditions for this agent and define the escalation triggers DAL-X will use to fire alerts when those conditions are met.
         </p>
       </div>
 
@@ -158,46 +230,23 @@ export function Q5Risks({ workflowId, investigation, onComplete }: QProps) {
       ) : (
         <div className="space-y-3">
           {risks.map((risk) => (
-            <div
-              key={risk.id}
-              className="rounded-md border border-border bg-background p-3.5 space-y-2"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <p className="text-sm text-foreground leading-snug flex-1">{risk.description}</p>
-                <button
-                  type="button"
-                  onClick={() => handleRemoveRisk(risk.id)}
-                  className="shrink-0 rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
-                  aria-label="Remove risk"
-                >
-                  <Trash2 className="size-3.5" />
-                </button>
-              </div>
-              <div className="flex flex-wrap items-center gap-1.5">
-                <CategoryBadge category={risk.category} />
-                <SeverityBadge severity={risk.severity} />
-                <span className="text-xs text-muted-foreground">
-                  {risk.accountableOwnerName}
-                  {risk.accountableOwnerTitle ? `, ${risk.accountableOwnerTitle}` : ""}
-                </span>
-              </div>
-            </div>
+            <RiskCard key={risk.id} risk={risk} onRemove={handleRemoveRisk} />
           ))}
         </div>
       )}
 
       <div className="rounded-md border border-border bg-muted/20 p-4 space-y-4">
         <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          Add risk
+          Add risk condition
         </p>
 
         <div className="space-y-1.5">
-          <Label htmlFor="q5-risk-description">Description</Label>
+          <Label htmlFor="q5-risk-description">Description <span className="text-destructive">*</span></Label>
           <Input
             id="q5-risk-description"
             value={draft.description}
             onChange={(e) => setDraft((d) => ({ ...d, description: e.target.value }))}
-            placeholder="Describe the risk"
+            placeholder="Describe the risk condition"
             aria-invalid={!!draftErrors.description}
           />
           {draftErrors.description && (
@@ -245,38 +294,83 @@ export function Q5Risks({ workflowId, investigation, onComplete }: QProps) {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="q5-owner-name">Accountable owner name</Label>
+            <Label htmlFor="q5-owner-name">Required reviewer name <span className="text-destructive">*</span></Label>
             <Input
               id="q5-owner-name"
-              value={draft.accountableOwnerName}
-              onChange={(e) => setDraft((d) => ({ ...d, accountableOwnerName: e.target.value }))}
+              value={draft.requiredReviewerName}
+              onChange={(e) => setDraft((d) => ({ ...d, requiredReviewerName: e.target.value }))}
               placeholder="Jane Smith"
-              aria-invalid={!!draftErrors.accountableOwnerName}
+              aria-invalid={!!draftErrors.requiredReviewerName}
             />
-            {draftErrors.accountableOwnerName && (
-              <p className="text-xs text-destructive">{draftErrors.accountableOwnerName}</p>
+            {draftErrors.requiredReviewerName && (
+              <p className="text-xs text-destructive">{draftErrors.requiredReviewerName}</p>
             )}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="q5-owner-title">Owner title</Label>
+            <Label htmlFor="q5-owner-title">Reviewer title <span className="text-destructive">*</span></Label>
             <Input
               id="q5-owner-title"
-              value={draft.accountableOwnerTitle}
-              onChange={(e) => setDraft((d) => ({ ...d, accountableOwnerTitle: e.target.value }))}
+              value={draft.requiredReviewerTitle}
+              onChange={(e) => setDraft((d) => ({ ...d, requiredReviewerTitle: e.target.value }))}
               placeholder="Chief Risk Officer"
-              aria-invalid={!!draftErrors.accountableOwnerTitle}
+              aria-invalid={!!draftErrors.requiredReviewerTitle}
             />
-            {draftErrors.accountableOwnerTitle && (
-              <p className="text-xs text-destructive">{draftErrors.accountableOwnerTitle}</p>
+            {draftErrors.requiredReviewerTitle && (
+              <p className="text-xs text-destructive">{draftErrors.requiredReviewerTitle}</p>
             )}
           </div>
+        </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="q5-output-conditions">Output conditions</Label>
+          <Textarea
+            id="q5-output-conditions"
+            value={draft.outputConditions}
+            onChange={(e) => setDraft((d) => ({ ...d, outputConditions: e.target.value }))}
+            placeholder="Describe the specific output states or patterns that indicate this risk is present — what does DAL-X look for in the agent's output?"
+            rows={2}
+          />
+        </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="q5-escalation-trigger">
+            Escalation trigger <span className="text-destructive">*</span>
+          </Label>
+          <Textarea
+            id="q5-escalation-trigger"
+            value={draft.escalationTrigger}
+            onChange={(e) => setDraft((d) => ({ ...d, escalationTrigger: e.target.value }))}
+            placeholder="Define the condition that causes DAL-X to fire an escalation alert to the required reviewer — e.g. 'when output contains a regulatory citation that has not been verified against current rules'."
+            rows={2}
+            aria-invalid={!!draftErrors.escalationTrigger}
+          />
+          <p className="text-[11px] text-muted-foreground">
+            DAL-X uses this trigger definition to fire real-time alerts to the named reviewer.
+          </p>
+          {draftErrors.escalationTrigger && (
+            <p className="text-xs text-destructive">{draftErrors.escalationTrigger}</p>
+          )}
+        </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="q5-prohibited-conditions">Prohibited execution conditions (optional)</Label>
+          <Textarea
+            id="q5-prohibited-conditions"
+            value={draft.prohibitedExecutionConditions ?? ""}
+            onChange={(e) => setDraft((d) => ({ ...d, prohibitedExecutionConditions: e.target.value || null }))}
+            placeholder="Define conditions under which DAL-X must block execution entirely — e.g. 'when the requesting user is not an authorized billing team member'."
+            rows={2}
+          />
+          <p className="text-[11px] text-muted-foreground">
+            DAL-X will block execution outright when these conditions are present, regardless of other authorization.
+          </p>
         </div>
 
         <div className="flex justify-end">
           <Button variant="outline" size="sm" onClick={handleAddRisk}>
             <Plus />
-            Add risk
+            Add risk condition
           </Button>
         </div>
       </div>
@@ -297,11 +391,7 @@ export function Q5Risks({ workflowId, investigation, onComplete }: QProps) {
       <Separator />
 
       <p className="text-xs text-muted-foreground">
-        <span className="font-medium">Methodology note:</span> Q5 produces a structured risk
-        register that feeds directly into the Defense File. Each risk must have a named accountable
-        owner — not a team or department — to satisfy the governance requirement. An explicitly
-        empty register (zero risks) is a valid and auditable answer; it signals that risks were
-        considered and none were identified, rather than that the question was skipped.
+        <span className="font-medium">Methodology note:</span> Q5 produces the risk condition register that DAL-X uses to configure escalation triggers and prohibited execution blocks. Each risk must have a named reviewer and a specific escalation trigger — DAL-X fires alerts to that reviewer when the trigger condition is met at runtime. An explicitly empty register is a valid auditable answer.
       </p>
     </div>
   );

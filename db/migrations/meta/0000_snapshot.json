@@ -1,0 +1,1152 @@
+{
+  "id": "7893df9b-262f-47ca-b70f-b40a14fd0991",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.checkpoint_responses": {
+      "name": "checkpoint_responses",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "engagement_id": {
+          "name": "engagement_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "agent_id": {
+          "name": "agent_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "action_carried_out": {
+          "name": "action_carried_out",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "reason": {
+          "name": "reason",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "client_consent_to_share": {
+          "name": "client_consent_to_share",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
+        "submitted_at": {
+          "name": "submitted_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "checkpoint_responses_engagement_id_engagements_id_fk": {
+          "name": "checkpoint_responses_engagement_id_engagements_id_fk",
+          "tableFrom": "checkpoint_responses",
+          "tableTo": "engagements",
+          "columnsFrom": [
+            "engagement_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "checkpoint_responses_agent_id_registered_agents_id_fk": {
+          "name": "checkpoint_responses_agent_id_registered_agents_id_fk",
+          "tableFrom": "checkpoint_responses",
+          "tableTo": "registered_agents",
+          "columnsFrom": [
+            "agent_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.defense_files": {
+      "name": "defense_files",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "agent_id": {
+          "name": "agent_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "defense_file_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'DRAFT'"
+        },
+        "pdf_blob_url": {
+          "name": "pdf_blob_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "signature_token": {
+          "name": "signature_token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "signature_token_expires_at": {
+          "name": "signature_token_expires_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "signed_at": {
+          "name": "signed_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "signed_by_ip": {
+          "name": "signed_by_ip",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "signed_by_user_agent": {
+          "name": "signed_by_user_agent",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sponsor_override_posture": {
+          "name": "sponsor_override_posture",
+          "type": "posture",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sponsor_override_rationale": {
+          "name": "sponsor_override_rationale",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sponsor_override_at": {
+          "name": "sponsor_override_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sponsor_override_name": {
+          "name": "sponsor_override_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tracking_key": {
+          "name": "tracking_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tracking_system": {
+          "name": "tracking_system",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tracking_status": {
+          "name": "tracking_status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sent_at": {
+          "name": "sent_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "defense_files_agent_id_registered_agents_id_fk": {
+          "name": "defense_files_agent_id_registered_agents_id_fk",
+          "tableFrom": "defense_files",
+          "tableTo": "registered_agents",
+          "columnsFrom": [
+            "agent_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "defense_files_agent_id_unique": {
+          "name": "defense_files_agent_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "agent_id"
+          ]
+        },
+        "defense_files_signature_token_unique": {
+          "name": "defense_files_signature_token_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "signature_token"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.engagements": {
+      "name": "engagements",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "company_name": {
+          "name": "company_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "contact_name": {
+          "name": "contact_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "contact_email": {
+          "name": "contact_email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ai_spend_description": {
+          "name": "ai_spend_description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "internal_audience": {
+          "name": "internal_audience",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "stage": {
+          "name": "stage",
+          "type": "engagement_stage",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'CENSUS'"
+        },
+        "nda_acknowledged_at": {
+          "name": "nda_acknowledged_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "census_completed_at": {
+          "name": "census_completed_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "investigation_completed_at": {
+          "name": "investigation_completed_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "registry_completed_at": {
+          "name": "registry_completed_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "defense_files_completed_at": {
+          "name": "defense_files_completed_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "closed_at": {
+          "name": "closed_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "checkpoint_scheduled_at": {
+          "name": "checkpoint_scheduled_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "checkpoint_completed_at": {
+          "name": "checkpoint_completed_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "analyst_clerk_id": {
+          "name": "analyst_clerk_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "notes": {
+          "name": "notes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.governance_manifests": {
+      "name": "governance_manifests",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "engagement_id": {
+          "name": "engagement_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "manifest_status": {
+          "name": "manifest_status",
+          "type": "manifest_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'PROPOSED'"
+        },
+        "manifest_json": {
+          "name": "manifest_json",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "version": {
+          "name": "version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        },
+        "signed_at": {
+          "name": "signed_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "signed_by_name": {
+          "name": "signed_by_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "signed_by_title": {
+          "name": "signed_by_title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "signed_by_email": {
+          "name": "signed_by_email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "signed_by_ip": {
+          "name": "signed_by_ip",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "blob_url": {
+          "name": "blob_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "generated_at": {
+          "name": "generated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "governance_manifests_engagement_id_engagements_id_fk": {
+          "name": "governance_manifests_engagement_id_engagements_id_fk",
+          "tableFrom": "governance_manifests",
+          "tableTo": "engagements",
+          "columnsFrom": [
+            "engagement_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.governance_postures": {
+      "name": "governance_postures",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "agent_id": {
+          "name": "agent_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "posture": {
+          "name": "posture",
+          "type": "posture",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "dalx_enforcement_posture": {
+          "name": "dalx_enforcement_posture",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "reason": {
+          "name": "reason",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "evidence_summary": {
+          "name": "evidence_summary",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "condition_for_change": {
+          "name": "condition_for_change",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "estimated_annual_savings_usd": {
+          "name": "estimated_annual_savings_usd",
+          "type": "numeric(14, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "lock_status": {
+          "name": "lock_status",
+          "type": "posture_lock_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'PROPOSED'"
+        },
+        "analyst_clerk_id": {
+          "name": "analyst_clerk_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "locked_at": {
+          "name": "locked_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "governance_postures_agent_id_registered_agents_id_fk": {
+          "name": "governance_postures_agent_id_registered_agents_id_fk",
+          "tableFrom": "governance_postures",
+          "tableTo": "registered_agents",
+          "columnsFrom": [
+            "agent_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "governance_postures_agent_id_unique": {
+          "name": "governance_postures_agent_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "agent_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.investigations": {
+      "name": "investigations",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "agent_id": {
+          "name": "agent_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "q1_sponsor_name": {
+          "name": "q1_sponsor_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "q1_sponsor_title": {
+          "name": "q1_sponsor_title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "q1_sponsor_email": {
+          "name": "q1_sponsor_email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "q1_business_requirement": {
+          "name": "q1_business_requirement",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "q1_permitted_purpose": {
+          "name": "q1_permitted_purpose",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "q1_authorized_at": {
+          "name": "q1_authorized_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "q1_completed_at": {
+          "name": "q1_completed_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "q2_evidence_type": {
+          "name": "q2_evidence_type",
+          "type": "evidence_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "q2_evidence_description": {
+          "name": "q2_evidence_description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "q2_evidence_strength": {
+          "name": "q2_evidence_strength",
+          "type": "evidence_strength",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "q2_activation_threshold": {
+          "name": "q2_activation_threshold",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "q2_expansion_conditions": {
+          "name": "q2_expansion_conditions",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "q2_completed_at": {
+          "name": "q2_completed_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "q3_cost_per_call_usd": {
+          "name": "q3_cost_per_call_usd",
+          "type": "numeric(10, 6)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "q3_monthly_volume": {
+          "name": "q3_monthly_volume",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "q3_monthly_total_usd": {
+          "name": "q3_monthly_total_usd",
+          "type": "numeric(12, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "q3_annualized_usd": {
+          "name": "q3_annualized_usd",
+          "type": "numeric(14, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "q3_interception_threshold_usd": {
+          "name": "q3_interception_threshold_usd",
+          "type": "numeric(10, 6)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "q3_escalation_threshold_usd": {
+          "name": "q3_escalation_threshold_usd",
+          "type": "numeric(14, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "q3_manual_override": {
+          "name": "q3_manual_override",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
+        "q3_manual_override_note": {
+          "name": "q3_manual_override_note",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "q3_completed_at": {
+          "name": "q3_completed_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "q4_alternative_type": {
+          "name": "q4_alternative_type",
+          "type": "alternative_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "q4_alternative_description": {
+          "name": "q4_alternative_description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "q4_estimated_cost_per_call_usd": {
+          "name": "q4_estimated_cost_per_call_usd",
+          "type": "numeric(10, 6)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "q4_feasibility": {
+          "name": "q4_feasibility",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "q4_migration_conditions": {
+          "name": "q4_migration_conditions",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "q4_client_implementation_required": {
+          "name": "q4_client_implementation_required",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": true
+        },
+        "q4_completed_at": {
+          "name": "q4_completed_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "q5_risks": {
+          "name": "q5_risks",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'[]'::jsonb"
+        },
+        "q5_completed_at": {
+          "name": "q5_completed_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "q6_recommended_posture": {
+          "name": "q6_recommended_posture",
+          "type": "posture",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "q6_dalx_enforcement_posture": {
+          "name": "q6_dalx_enforcement_posture",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "q6_reasoning_chain": {
+          "name": "q6_reasoning_chain",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "q6_analyst_accepted": {
+          "name": "q6_analyst_accepted",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "q6_analyst_override_note": {
+          "name": "q6_analyst_override_note",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "q6_completed_at": {
+          "name": "q6_completed_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "completed_at": {
+          "name": "completed_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "investigations_agent_id_registered_agents_id_fk": {
+          "name": "investigations_agent_id_registered_agents_id_fk",
+          "tableFrom": "investigations",
+          "tableTo": "registered_agents",
+          "columnsFrom": [
+            "agent_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "investigations_agent_id_unique": {
+          "name": "investigations_agent_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "agent_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.registered_agents": {
+      "name": "registered_agents",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "engagement_id": {
+          "name": "engagement_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "permitted_purpose": {
+          "name": "permitted_purpose",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "business_outcome": {
+          "name": "business_outcome",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cost_per_call_usd": {
+          "name": "cost_per_call_usd",
+          "type": "numeric(10, 6)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "monthly_call_volume": {
+          "name": "monthly_call_volume",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "model_tier": {
+          "name": "model_tier",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "existing_evidence_status": {
+          "name": "existing_evidence_status",
+          "type": "evidence_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'NONE'"
+        },
+        "registration_status": {
+          "name": "registration_status",
+          "type": "registration_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'ACTIVE'"
+        },
+        "dalx_registered": {
+          "name": "dalx_registered",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "sort_order": {
+          "name": "sort_order",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "registered_agents_engagement_id_engagements_id_fk": {
+          "name": "registered_agents_engagement_id_engagements_id_fk",
+          "tableFrom": "registered_agents",
+          "tableTo": "engagements",
+          "columnsFrom": [
+            "engagement_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {
+    "public.alternative_type": {
+      "name": "alternative_type",
+      "schema": "public",
+      "values": [
+        "RULES_BASED",
+        "RPA",
+        "SMALLER_MODEL",
+        "NO_MODEL",
+        "OTHER"
+      ]
+    },
+    "public.defense_file_status": {
+      "name": "defense_file_status",
+      "schema": "public",
+      "values": [
+        "DRAFT",
+        "SENT",
+        "SIGNED",
+        "OVERRIDDEN"
+      ]
+    },
+    "public.engagement_stage": {
+      "name": "engagement_stage",
+      "schema": "public",
+      "values": [
+        "CENSUS",
+        "INVESTIGATION",
+        "REGISTRY",
+        "DEFENSE_FILES",
+        "CLOSED"
+      ]
+    },
+    "public.evidence_strength": {
+      "name": "evidence_strength",
+      "schema": "public",
+      "values": [
+        "NONE",
+        "WEAK",
+        "MODERATE",
+        "STRONG"
+      ]
+    },
+    "public.evidence_type": {
+      "name": "evidence_type",
+      "schema": "public",
+      "values": [
+        "NONE",
+        "ANECDOTAL",
+        "DOCUMENTED"
+      ]
+    },
+    "public.manifest_status": {
+      "name": "manifest_status",
+      "schema": "public",
+      "values": [
+        "PROPOSED",
+        "SIGNED",
+        "SUPERSEDED"
+      ]
+    },
+    "public.posture": {
+      "name": "posture",
+      "schema": "public",
+      "values": [
+        "KEEP",
+        "DOWNSIZE",
+        "REPLACE",
+        "KILL"
+      ]
+    },
+    "public.posture_lock_status": {
+      "name": "posture_lock_status",
+      "schema": "public",
+      "values": [
+        "PROPOSED",
+        "LOCKED"
+      ]
+    },
+    "public.registration_status": {
+      "name": "registration_status",
+      "schema": "public",
+      "values": [
+        "ACTIVE",
+        "SUSPENDED",
+        "DECOMMISSIONING",
+        "CLOSED"
+      ]
+    },
+    "public.risk_category": {
+      "name": "risk_category",
+      "schema": "public",
+      "values": [
+        "OPERATIONAL",
+        "REGULATORY",
+        "COMPLIANCE",
+        "REPUTATIONAL"
+      ]
+    },
+    "public.risk_severity": {
+      "name": "risk_severity",
+      "schema": "public",
+      "values": [
+        "LOW",
+        "MEDIUM",
+        "HIGH"
+      ]
+    }
+  },
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

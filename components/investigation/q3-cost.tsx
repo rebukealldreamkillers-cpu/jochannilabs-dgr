@@ -10,7 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import type { Investigation } from "@/db/schema";
 
 type QProps = {
-  workflowId: string;
+  agentId: string;
   investigation: Investigation;
   onComplete: () => void;
 };
@@ -19,12 +19,18 @@ function formatUsd(value: number): string {
   return value.toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 });
 }
 
-export function Q3Cost({ workflowId, investigation, onComplete }: QProps) {
+export function Q3Cost({ agentId, investigation, onComplete }: QProps) {
   const [costPerCall, setCostPerCall] = useState(
     investigation.q3CostPerCallUsd != null ? String(investigation.q3CostPerCallUsd) : ""
   );
   const [monthlyVolume, setMonthlyVolume] = useState(
     investigation.q3MonthlyVolume != null ? String(investigation.q3MonthlyVolume) : ""
+  );
+  const [interceptionThreshold, setInterceptionThreshold] = useState(
+    investigation.q3InterceptionThresholdUsd != null ? String(investigation.q3InterceptionThresholdUsd) : ""
+  );
+  const [escalationThreshold, setEscalationThreshold] = useState(
+    investigation.q3EscalationThresholdUsd != null ? String(investigation.q3EscalationThresholdUsd) : ""
   );
   const [manualOverride, setManualOverride] = useState(
     investigation.q3ManualOverride ?? false
@@ -60,12 +66,14 @@ export function Q3Cost({ workflowId, investigation, onComplete }: QProps) {
     setSaving(true);
     setError(null);
     try {
-      const res = await fetch(`/api/investigations/${workflowId}`, {
+      const res = await fetch(`/api/investigations/${agentId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           q3CostPerCallUsd: costPerCall.trim() || null,
           q3MonthlyVolume: monthlyVolume.trim() ? parseInt(monthlyVolume, 10) : null,
+          q3InterceptionThresholdUsd: interceptionThreshold.trim() || null,
+          q3EscalationThresholdUsd: escalationThreshold.trim() || null,
           q3ManualOverride: manualOverride,
           q3ManualOverrideNote: manualOverride ? manualOverrideNote.trim() : null,
           q3Complete: true,
@@ -88,10 +96,10 @@ export function Q3Cost({ workflowId, investigation, onComplete }: QProps) {
     <div className="space-y-6">
       <div>
         <h2 className="text-base font-semibold text-foreground">
-          Q3 — Cost Baseline
+          Q3 — Cost Baseline &amp; DAL-X Thresholds
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Establish the annualized cost of running this workflow at current volume.
+          Establish the annualized cost of running this agent at current volume, and set the cost thresholds DAL-X will use to intercept or escalate.
         </p>
       </div>
 
@@ -156,6 +164,55 @@ export function Q3Cost({ workflowId, investigation, onComplete }: QProps) {
         )}
       </div>
 
+      <Separator />
+
+      <div>
+        <p className="text-sm font-medium mb-1">DAL-X cost thresholds</p>
+        <p className="text-xs text-muted-foreground mb-4">
+          DAL-X uses these thresholds to decide when to block, intercept, or escalate execution requests from this agent.
+        </p>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <Label htmlFor="q3-interception-threshold">Interception threshold (USD per call)</Label>
+            <div className="relative">
+              <span className="pointer-events-none absolute inset-y-0 left-2.5 flex items-center text-muted-foreground text-sm">
+                $
+              </span>
+              <Input
+                id="q3-interception-threshold"
+                className="pl-6"
+                value={interceptionThreshold}
+                onChange={(e) => setInterceptionThreshold(e.target.value)}
+                placeholder="0.010000"
+                inputMode="decimal"
+              />
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              Calls exceeding this cost will be intercepted and held for authorization.
+            </p>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="q3-escalation-threshold">Escalation threshold (USD monthly)</Label>
+            <div className="relative">
+              <span className="pointer-events-none absolute inset-y-0 left-2.5 flex items-center text-muted-foreground text-sm">
+                $
+              </span>
+              <Input
+                id="q3-escalation-threshold"
+                className="pl-6"
+                value={escalationThreshold}
+                onChange={(e) => setEscalationThreshold(e.target.value)}
+                placeholder="5000.00"
+                inputMode="decimal"
+              />
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              Monthly spend exceeding this amount triggers escalation to the named sponsor.
+            </p>
+          </div>
+        </div>
+      </div>
+
       <div className="flex items-center gap-3">
         <button
           type="button"
@@ -175,7 +232,6 @@ export function Q3Cost({ workflowId, investigation, onComplete }: QProps) {
           />
         </button>
         <Label
-          htmlFor="q3-manual-override-toggle"
           className="cursor-pointer select-none text-sm"
           onClick={() => setManualOverride((v) => !v)}
         >
@@ -221,11 +277,7 @@ export function Q3Cost({ workflowId, investigation, onComplete }: QProps) {
       <Separator />
 
       <p className="text-xs text-muted-foreground">
-        <span className="font-medium">Methodology note:</span> Q3 establishes the cost baseline
-        against which all alternatives are compared. The annualized figure becomes the primary
-        financial input to the verdict recommendation. Where vendor billing structures do not map
-        cleanly to per-call pricing, the manual override captures the adjusted figure with a
-        documented rationale for audit purposes.
+        <span className="font-medium">Methodology note:</span> Q3 establishes the cost baseline and the DAL-X enforcement thresholds. The interception threshold gates individual calls; the escalation threshold triggers sponsor notification when monthly spend exceeds the approved boundary. Both become immutable in the signed Governance Manifest.
       </p>
     </div>
   );

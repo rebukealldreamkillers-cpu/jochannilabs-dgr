@@ -1,9 +1,8 @@
 import { notFound } from "next/navigation";
 import { getDefenseFileByToken } from "@/lib/defense-files";
 import { SponsorSigningForm } from "@/components/defense-files/sponsor-signing-form";
-import { VerdictBadge } from "@/components/engagements/verdict-badge";
-import { CheckCircle2, AlertTriangle } from "lucide-react";
-import type { RiskEntry } from "@/db/schema";
+import { PostureBadge } from "@/components/engagements/verdict-badge";
+import { CheckCircle2, AlertTriangle, Shield } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -36,9 +35,9 @@ export default async function SignPage({
   }
 
   const alreadySigned = !!df.signedAt;
-  const wf = df.workflow;
+  const wf = df.agent;
   const inv = wf.investigation;
-  const vrd = wf.verdict;
+  const vrd = wf.governancePosture;
   const eng = wf.engagement;
 
   const fmt = (n: number) =>
@@ -56,8 +55,8 @@ export default async function SignPage({
           <h1 className="text-lg font-semibold">Signed and recorded</h1>
           <p className="text-sm text-muted-foreground">
             {df.status === "OVERRIDDEN"
-              ? "Your departure from the verdict recommendation has been recorded."
-              : "You have accepted this verdict. The Decision Defense File is now closed."}
+              ? "Your departure from the governance posture has been recorded."
+              : "You have authorized this governance posture. The Defense File is now closed."}
           </p>
           <p className="text-xs text-muted-foreground">
             {df.signedAt
@@ -80,22 +79,49 @@ export default async function SignPage({
           <p className="text-xs font-mono text-muted-foreground uppercase tracking-wider">
             Jochanni Labs · Decision Governance Review
           </p>
-          <h1 className="text-xl font-semibold mt-1">Decision Defense File</h1>
+          <h1 className="text-xl font-semibold mt-1">Governance Defense File</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
             {eng.companyName} · {wf.name}
           </p>
         </div>
 
-        {/* Verdict */}
+        {/* Three-act framing */}
+        <div className="rounded-md border border-slate-200 bg-slate-50 px-4 py-3 space-y-1">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+            Act 2 of 3 — Executive authorization
+          </p>
+          <p className="text-xs text-slate-700 leading-relaxed">
+            Jochanni Labs has completed the governance assessment (Act 1). Your signature
+            below authorizes the governance posture and enables DAL-X runtime enforcement
+            (Act 3). You may accept the issued posture or record a departure with rationale.
+          </p>
+        </div>
+
+        {/* Governance posture */}
         {vrd && (
           <div className="border rounded-lg p-5 space-y-3">
             <div className="flex items-center gap-3">
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Assigned verdict
+                Governance posture
               </p>
-              <VerdictBadge verdict={vrd.verdict as "KEEP" | "DOWNSIZE" | "REPLACE" | "KILL"} />
+              <PostureBadge posture={vrd.posture as "KEEP" | "DOWNSIZE" | "REPLACE" | "KILL"} />
             </div>
             <p className="text-sm leading-relaxed">{vrd.reason}</p>
+
+            {vrd.dalxEnforcementPosture && (
+              <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2.5 space-y-1">
+                <div className="flex items-center gap-1.5">
+                  <Shield className="w-3 h-3 text-slate-500" />
+                  <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                    DAL-X enforcement action
+                  </p>
+                </div>
+                <p className="text-xs text-slate-700 leading-relaxed">
+                  {vrd.dalxEnforcementPosture}
+                </p>
+              </div>
+            )}
+
             {vrd.conditionForChange && (
               <div className="pt-3 border-t">
                 <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide mb-1">
@@ -124,6 +150,12 @@ export default async function SignPage({
                   <p className="text-muted-foreground text-xs">
                     {inv.q1SponsorTitle} · {inv.q1SponsorEmail}
                   </p>
+                  {inv.q1PermittedPurpose && (
+                    <p className="text-muted-foreground text-xs mt-1 leading-relaxed">
+                      <span className="font-medium text-foreground">Permitted purpose:</span>{" "}
+                      {inv.q1PermittedPurpose}
+                    </p>
+                  )}
                 </div>
               </div>
             )}
@@ -136,6 +168,31 @@ export default async function SignPage({
                   </p>
                   {inv.q2EvidenceDescription && (
                     <p className="text-muted-foreground text-xs mt-0.5">{inv.q2EvidenceDescription}</p>
+                  )}
+                  {inv.q2ActivationThreshold && (
+                    <p className="text-muted-foreground text-xs mt-1 leading-relaxed">
+                      <span className="font-medium text-foreground">Activation threshold:</span>{" "}
+                      {inv.q2ActivationThreshold}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+            {(inv.q3InterceptionThresholdUsd || inv.q3EscalationThresholdUsd) && (
+              <div className="px-4 py-3 flex gap-4">
+                <span className="text-xs font-mono text-muted-foreground w-6 mt-0.5">Q3</span>
+                <div className="space-y-0.5">
+                  {inv.q3InterceptionThresholdUsd && (
+                    <p className="text-muted-foreground text-xs">
+                      <span className="font-medium text-foreground">Interception threshold:</span>{" "}
+                      {fmt(parseFloat(inv.q3InterceptionThresholdUsd))}/call
+                    </p>
+                  )}
+                  {inv.q3EscalationThresholdUsd && (
+                    <p className="text-muted-foreground text-xs">
+                      <span className="font-medium text-foreground">Escalation threshold:</span>{" "}
+                      {fmt(parseFloat(inv.q3EscalationThresholdUsd))}/mo
+                    </p>
                   )}
                 </div>
               </div>

@@ -13,12 +13,12 @@ export default async function CheckpointPage({
   const engagement = await getEngagement(engagementId);
   if (!engagement) notFound();
 
-  const workflows = engagement.workflows
-    .filter((w) => !!w.verdict)
+  const workflows = engagement.registeredAgents
+    .filter((w) => !!w.governancePosture)
     .map((w) => ({
       id: w.id,
       name: w.name,
-      verdict: w.verdict?.verdict ?? null,
+      verdict: w.governancePosture?.posture ?? null,
     }));
 
   return (

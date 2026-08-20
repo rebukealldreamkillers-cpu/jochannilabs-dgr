@@ -1,46 +1,48 @@
 import { db } from "@/db";
-import { workflows } from "@/db/schema";
-import { eq, and, isNull, asc, gt, lt, sql } from "drizzle-orm";
+import { registeredAgents } from "@/db/schema";
+import { eq, and, isNull, asc, gt, lt } from "drizzle-orm";
 
 export async function getWorkflowsForEngagement(engagementId: string) {
-  return db.query.workflows.findMany({
-    where: and(eq(workflows.engagementId, engagementId), isNull(workflows.deletedAt)),
-    orderBy: [asc(workflows.sortOrder)],
-    with: { investigation: true, verdict: true, defenseFile: true },
+  return db.query.registeredAgents.findMany({
+    where: and(eq(registeredAgents.engagementId, engagementId), isNull(registeredAgents.deletedAt)),
+    orderBy: [asc(registeredAgents.sortOrder)],
+    with: { investigation: true, governancePosture: true, defenseFile: true },
   });
 }
 
 export async function getWorkflow(id: string) {
-  return db.query.workflows.findFirst({
-    where: and(eq(workflows.id, id), isNull(workflows.deletedAt)),
-    with: { engagement: true, investigation: true, verdict: true, defenseFile: true },
+  return db.query.registeredAgents.findFirst({
+    where: and(eq(registeredAgents.id, id), isNull(registeredAgents.deletedAt)),
+    with: { engagement: true, investigation: true, governancePosture: true, defenseFile: true },
   });
 }
 
 export async function createWorkflow(data: {
   engagementId: string;
   name: string;
+  permittedPurpose: string;
   businessOutcome: string;
   costPerCallUsd?: string;
   monthlyCallVolume?: string;
   modelTier?: string;
   existingEvidenceStatus?: "NONE" | "ANECDOTAL" | "DOCUMENTED";
 }) {
-  const existing = await db.query.workflows.findMany({
-    where: and(eq(workflows.engagementId, data.engagementId), isNull(workflows.deletedAt)),
+  const existing = await db.query.registeredAgents.findMany({
+    where: and(eq(registeredAgents.engagementId, data.engagementId), isNull(registeredAgents.deletedAt)),
   });
 
   if (existing.length >= 10) {
-    throw new Error("Maximum of 10 workflows per engagement");
+    throw new Error("Maximum of 10 registered agents per engagement");
   }
 
   const maxOrder = existing.reduce((m, w) => Math.max(m, w.sortOrder), -1);
 
-  const [workflow] = await db
-    .insert(workflows)
+  const [agent] = await db
+    .insert(registeredAgents)
     .values({
       engagementId: data.engagementId,
       name: data.name,
+      permittedPurpose: data.permittedPurpose,
       businessOutcome: data.businessOutcome,
       costPerCallUsd: data.costPerCallUsd ?? null,
       monthlyCallVolume: data.monthlyCallVolume ? parseInt(data.monthlyCallVolume) : null,
@@ -50,68 +52,69 @@ export async function createWorkflow(data: {
     })
     .returning();
 
-  return workflow;
+  return agent;
 }
 
 export async function updateWorkflow(
   id: string,
   data: {
     name?: string;
+    permittedPurpose?: string;
     businessOutcome?: string;
     costPerCallUsd?: string;
     monthlyCallVolume?: string;
     modelTier?: string;
     existingEvidenceStatus?: "NONE" | "ANECDOTAL" | "DOCUMENTED";
+    registrationStatus?: "ACTIVE" | "SUSPENDED" | "DECOMMISSIONING" | "CLOSED";
   },
 ) {
   const [updated] = await db
-    .update(workflows)
+    .update(registeredAgents)
     .set({
       ...data,
       monthlyCallVolume: data.monthlyCallVolume ? parseInt(data.monthlyCallVolume) : undefined,
       updatedAt: new Date(),
     })
-    .where(eq(workflows.id, id))
+    .where(eq(registeredAgents.id, id))
     .returning();
   return updated;
 }
 
 export async function softDeleteWorkflow(id: string) {
   const [deleted] = await db
-    .update(workflows)
+    .update(registeredAgents)
     .set({ deletedAt: new Date(), updatedAt: new Date() })
-    .where(eq(workflows.id, id))
+    .where(eq(registeredAgents.id, id))
     .returning();
   return deleted;
 }
 
 export async function moveWorkflow(id: string, direction: "up" | "down") {
-  const workflow = await db.query.workflows.findFirst({
-    where: and(eq(workflows.id, id), isNull(workflows.deletedAt)),
+  const agent = await db.query.registeredAgents.findFirst({
+    where: and(eq(registeredAgents.id, id), isNull(registeredAgents.deletedAt)),
   });
-  if (!workflow) throw new Error("Workflow not found");
+  if (!agent) throw new Error("Agent not found");
 
-  const sibling = await db.query.workflows.findFirst({
+  const sibling = await db.query.registeredAgents.findFirst({
     where: and(
-      eq(workflows.engagementId, workflow.engagementId),
-      isNull(workflows.deletedAt),
+      eq(registeredAgents.engagementId, agent.engagementId),
+      isNull(registeredAgents.deletedAt),
       direction === "up"
-        ? lt(workflows.sortOrder, workflow.sortOrder)
-        : gt(workflows.sortOrder, workflow.sortOrder),
+        ? lt(registeredAgents.sortOrder, agent.sortOrder)
+        : gt(registeredAgents.sortOrder, agent.sortOrder),
     ),
-    orderBy: direction === "up" ? [asc(workflows.sortOrder)] : [asc(workflows.sortOrder)],
+    orderBy: [asc(registeredAgents.sortOrder)],
   });
 
-  if (!sibling) return; // already at boundary
+  if (!sibling) return;
 
-  // Swap sort orders
   await db
-    .update(workflows)
+    .update(registeredAgents)
     .set({ sortOrder: sibling.sortOrder, updatedAt: new Date() })
-    .where(eq(workflows.id, workflow.id));
+    .where(eq(registeredAgents.id, agent.id));
 
   await db
-    .update(workflows)
-    .set({ sortOrder: workflow.sortOrder, updatedAt: new Date() })
-    .where(eq(workflows.id, sibling.id));
+    .update(registeredAgents)
+    .set({ sortOrder: agent.sortOrder, updatedAt: new Date() })
+    .where(eq(registeredAgents.id, sibling.id));
 }

@@ -10,17 +10,20 @@ import { Separator } from "@/components/ui/separator";
 import type { Investigation } from "@/db/schema";
 
 type QProps = {
-  workflowId: string;
+  agentId: string;
   investigation: Investigation;
   onComplete: () => void;
 };
 
-export function Q1Sponsor({ workflowId, investigation, onComplete }: QProps) {
+export function Q1Sponsor({ agentId, investigation, onComplete }: QProps) {
   const [sponsorName, setSponsorName] = useState(investigation.q1SponsorName ?? "");
   const [sponsorTitle, setSponsorTitle] = useState(investigation.q1SponsorTitle ?? "");
   const [sponsorEmail, setSponsorEmail] = useState(investigation.q1SponsorEmail ?? "");
   const [businessRequirement, setBusinessRequirement] = useState(
     investigation.q1BusinessRequirement ?? ""
+  );
+  const [permittedPurpose, setPermittedPurpose] = useState(
+    investigation.q1PermittedPurpose ?? ""
   );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -38,6 +41,9 @@ export function Q1Sponsor({ workflowId, investigation, onComplete }: QProps) {
     if (!businessRequirement.trim()) {
       errs.businessRequirement = "Business requirement is required.";
     }
+    if (!permittedPurpose.trim()) {
+      errs.permittedPurpose = "Permitted purpose is required.";
+    }
     setValidationErrors(errs);
     return Object.keys(errs).length === 0;
   }
@@ -47,7 +53,7 @@ export function Q1Sponsor({ workflowId, investigation, onComplete }: QProps) {
     setSaving(true);
     setError(null);
     try {
-      const res = await fetch(`/api/investigations/${workflowId}`, {
+      const res = await fetch(`/api/investigations/${agentId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -55,6 +61,7 @@ export function Q1Sponsor({ workflowId, investigation, onComplete }: QProps) {
           q1SponsorTitle: sponsorTitle.trim(),
           q1SponsorEmail: sponsorEmail.trim(),
           q1BusinessRequirement: businessRequirement.trim(),
+          q1PermittedPurpose: permittedPurpose.trim(),
           q1Complete: true,
         }),
       });
@@ -75,10 +82,10 @@ export function Q1Sponsor({ workflowId, investigation, onComplete }: QProps) {
     <div className="space-y-6">
       <div>
         <h2 className="text-base font-semibold text-foreground">
-          Q1 — Business Sponsor &amp; Requirement
+          Q1 — Executive Sponsor &amp; Authority Chain
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Identify the individual accountable for this workflow&apos;s continued operation.
+          Identify the individual accountable for this agent&apos;s continued operation and confirm the specific purpose it is authorized to perform.
         </p>
       </div>
 
@@ -136,6 +143,31 @@ export function Q1Sponsor({ workflowId, investigation, onComplete }: QProps) {
 
         <div className="space-y-1.5 sm:col-span-2">
           <div className="flex items-baseline justify-between">
+            <Label htmlFor="q1-permitted-purpose">
+              Permitted purpose <span className="text-destructive">*</span>
+            </Label>
+            <span className="text-xs text-muted-foreground">
+              {permittedPurpose.length}/500
+            </span>
+          </div>
+          <Textarea
+            id="q1-permitted-purpose"
+            value={permittedPurpose}
+            onChange={(e) => setPermittedPurpose(e.target.value.slice(0, 500))}
+            placeholder="The specific, bounded task this agent is authorized to perform — the scope DAL-X will enforce at runtime."
+            rows={3}
+            aria-invalid={!!validationErrors.permittedPurpose}
+          />
+          <p className="text-[11px] text-muted-foreground">
+            This becomes the DAL-X authority scope. Requests outside this boundary will be blocked or escalated.
+          </p>
+          {validationErrors.permittedPurpose && (
+            <p className="text-xs text-destructive">{validationErrors.permittedPurpose}</p>
+          )}
+        </div>
+
+        <div className="space-y-1.5 sm:col-span-2">
+          <div className="flex items-baseline justify-between">
             <Label htmlFor="q1-business-requirement">
               Business requirement <span className="text-destructive">*</span>
             </Label>
@@ -147,8 +179,8 @@ export function Q1Sponsor({ workflowId, investigation, onComplete }: QProps) {
             id="q1-business-requirement"
             value={businessRequirement}
             onChange={(e) => setBusinessRequirement(e.target.value.slice(0, 500))}
-            placeholder="Describe the business requirement or strategic objective this workflow is authorized to satisfy."
-            rows={4}
+            placeholder="Describe the business requirement or strategic objective this agent is authorized to satisfy."
+            rows={3}
             aria-invalid={!!validationErrors.businessRequirement}
           />
           {validationErrors.businessRequirement && (
@@ -158,7 +190,7 @@ export function Q1Sponsor({ workflowId, investigation, onComplete }: QProps) {
       </div>
 
       <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-400">
-        Sponsor must be a named individual, not a department.
+        Sponsor must be a named individual, not a department. The permitted purpose becomes an immutable field in the signed Governance Manifest.
       </p>
 
       {error && (
@@ -177,10 +209,7 @@ export function Q1Sponsor({ workflowId, investigation, onComplete }: QProps) {
       <Separator />
 
       <p className="text-xs text-muted-foreground">
-        <span className="font-medium">Methodology note:</span> Q1 establishes a named accountable
-        sponsor and the authorizing business requirement. This creates the audit trail linking each
-        AI workflow to a specific individual who accepted responsibility for its deployment and
-        ongoing cost.
+        <span className="font-medium">Methodology note:</span> Q1 establishes the authority chain — a named sponsor, the authorizing business requirement, and the specific permitted purpose. DAL-X uses the permitted purpose as the runtime authority boundary for this agent.
       </p>
     </div>
   );
