@@ -20,7 +20,13 @@ export default async function EngagementDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const engagement = await getEngagement(id);
+  let engagement;
+  try {
+    engagement = await getEngagement(id);
+  } catch (e) {
+    console.error("getEngagement error:", e);
+    throw e;
+  }
   if (!engagement) notFound();
 
   const stage = engagement.stage as Stage;
